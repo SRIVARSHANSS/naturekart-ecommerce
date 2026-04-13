@@ -30,104 +30,46 @@ const Stars = ({ rating, interactive = false, onRate }) => (
 );
 
 // ─── Full Product Catalogue (60 Products) ────────────────────────────────────────
-const ALL_PRODUCTS = [
-  {
-    id: 1, name: "Ashwagandha Powder", price: 349, mrp: 499, rating: 4.8, reviews: 240,
-    tag: "Bestseller", category: "Ayurveda", icon: "🌿", image: "/images/ashwagandha.png",
-    images: ["/images/ashwagandha.png", "/images/triphala.png", "/images/moringa.png"],
-    inStock: true, qty: 60, unit: "grams",
-    desc: "Premium KSM-66 Ashwagandha root extract — the world's most studied adaptogen. Clinically proven to reduce cortisol, boost testosterone, and enhance physical performance.",
-    benefits: ["Reduces stress & anxiety by 44%", "Improves strength & endurance", "Supports healthy thyroid function", "Enhances cognitive function & memory", "Boosts testosterone & male vitality"],
-    ingredients: ["KSM-66 Ashwagandha Root Extract 500mg", "Black Pepper Extract (Piperine) 5mg", "Organic Rice Flour (filler)", "Vegetable Capsule Shell"],
-    usage: ["Take 1–2 capsules daily after meals", "Best taken with warm milk or water", "Use consistently for 8–12 weeks for optimal results", "Avoid if pregnant or breastfeeding"],
-    aiReason: "Ashwagandha is a top adaptogen for stress, low energy, and hormonal balance. Based on your interest in wellness, this root extract directly targets cortisol regulation while supporting adrenal health — making it ideal for modern high-stress lifestyles.",
-    aiTags: ["Stress Relief", "Energy Boost", "Hormonal Balance", "Adaptogen"],
-  },
-  {
-    id: 2, name: "Turmeric Gold Capsules", price: 299, mrp: 399, rating: 4.7, reviews: 180,
-    tag: "New", category: "Supplements", icon: "🟡", image: "/images/turmeric.png",
-    images: ["/images/turmeric.png", "/images/moringa.png", "/images/ashwagandha.png"],
-    inStock: true, qty: 60, unit: "capsules",
-    desc: "High-potency turmeric with 95% curcuminoids paired with BioPerine® black pepper for 20x better absorption. Nature's most powerful anti-inflammatory compound.",
-    benefits: ["Powerful anti-inflammatory action", "Supports joint health & mobility", "Rich in antioxidants", "Aids digestion & gut health", "Supports healthy liver function"],
-    ingredients: ["Turmeric Root Extract (95% curcuminoids) 500mg", "BioPerine® Black Pepper 5mg", "Ginger Root Extract 50mg", "Vegetable Capsule"],
-    usage: ["Take 2 capsules daily with meals", "Pair with a healthy fat for best absorption", "Consistent use for 4+ weeks recommended"],
-    aiReason: "Curcumin in turmeric is one of the most researched anti-inflammatory compounds. It's ideal for joint pain, gut inflammation, and oxidative stress — combined with BioPerine® for superior bioavailability.",
-    aiTags: ["Anti-Inflammatory", "Joint Health", "Antioxidant", "Gut Health"],
-  },
-  {
-    id: 3, name: "Moringa Leaf Extract", price: 449, mrp: 599, rating: 4.9, reviews: 310,
-    tag: "Top Rated", category: "Supplements", icon: "🌱", image: "/images/moringa.png",
-    images: ["/images/moringa.png", "/images/ashwagandha.png", "/images/turmeric.png"],
-    inStock: true, qty: 100, unit: "grams",
-    desc: "Superfood-grade moringa oleifera leaf powder — nature's most nutrient-dense plant. Contains 92+ verifiable nutrients, 46 antioxidants, and all 9 essential amino acids.",
-    benefits: ["92+ essential nutrients in one dose", "Rich in iron — fights anaemia", "Powerful detoxification support", "Supports healthy blood sugar", "Complete plant-based protein source"],
-    ingredients: ["Organic Moringa Oleifera Leaf Powder 100%", "No additives, fillers, or preservatives"],
-    usage: ["Add 1 tsp to smoothies, juices or warm water", "Mix into yoghurt or oatmeal", "Start with half teaspoon and build up gradually"],
-    aiReason: "Moringa is the most nutrient-dense plant on Earth. For anyone focused on nutrition, immunity, or iron intake — moringa delivers more vitamin C than oranges, more calcium than milk, and more protein than eggs per gram.",
-    aiTags: ["Superfood", "Iron Rich", "Immunity", "Detox"],
-  },
-  {
-    id: 4, name: "Neem Face Wash", price: 199, mrp: 249, rating: 4.5, reviews: 120,
-    tag: null, category: "Skincare", icon: "💚", image: "/images/neem-facewash.png",
-    images: ["/images/neem-facewash.png", "/images/rosehip.png", "/images/moringa.png"],
-    inStock: true, qty: 100, unit: "ml",
-    desc: "Gentle yet powerful neem & tea tree face wash that deeply cleanses pores, fights acne-causing bacteria, and leaves skin fresh and clear. Suitable for all skin types.",
-    benefits: ["Fights acne & pimple-causing bacteria", "Unclogs pores and removes excess oil", "Anti-bacterial & anti-fungal properties", "Suitable for sensitive skin", "Reduces blackheads & whiteheads"],
-    ingredients: ["Neem Leaf Extract", "Tea Tree Essential Oil", "Aloe Vera Gel", "Glycerin", "Vitamin E", "Aqua"],
-    usage: ["Apply to wet face & neck", "Massage gently in circular motions for 60 seconds", "Rinse thoroughly with lukewarm water", "Use twice daily for best results"],
-    aiReason: "Neem has been used in Ayurveda for over 4000 years as a natural antibiotic for skin. Combined with tea tree oil, this face wash targets acne at the root — without the harsh dryness of chemical alternatives.",
-    aiTags: ["Anti-Acne", "Pore Care", "Natural Cleanser", "Sensitive Skin"],
-  },
-  {
-    id: 5, name: "Triphala Churna", price: 249, mrp: 320, rating: 4.6, reviews: 95,
-    tag: null, category: "Ayurveda", icon: "🪴", image: "/images/triphala.png",
-    images: ["/images/triphala.png", "/images/ashwagandha.png", "/images/moringa.png"],
-    inStock: true, qty: 100, unit: "grams",
-    desc: "The legendary Ayurvedic trifecta — Amalaki, Bibhitaki, and Haritaki — combined in precise proportions for comprehensive digestive wellness and gentle detoxification.",
-    benefits: ["Gently relieves constipation", "Supports healthy gut microbiome", "Natural full-body detox", "Rich in vitamin C (Amalaki)", "Supports eye health"],
-    ingredients: ["Amalaki (Emblica officinalis) 33.3%", "Bibhitaki (Terminalia bellirica) 33.3%", "Haritaki (Terminalia chebula) 33.3%"],
-    usage: ["Mix 1 tsp in warm water at bedtime", "Or take with honey in the morning", "Start with a smaller dose and increase gradually", "Not recommended during pregnancy"],
-    aiReason: "Triphala is a cornerstone Ayurvedic formula with clinical evidence supporting its use for IBS, constipation, and gut microbiome health. It gently cleanses without dependency — unlike conventional laxatives.",
-    aiTags: ["Digestive Health", "Detox", "Gut Microbiome", "Ayurvedic"],
-  },
-  {
-    id: 6, name: "Rose Hip Face Oil", price: 599, mrp: 799, rating: 4.8, reviews: 205,
-    tag: "Premium", category: "Skincare", icon: "🌸", image: "/images/rosehip.png",
-    images: ["/images/rosehip.png", "/images/neem-facewash.png", "/images/moringa.png"],
-    inStock: true, qty: 30, unit: "ml",
-    desc: "100% cold-pressed rosehip seed oil — the luxury skincare secret of supermodels and dermatologists. Clinically proven to reduce scars, wrinkles, and hyperpigmentation.",
-    benefits: ["Reduces scars & stretch marks", "Fades hyperpigmentation & dark spots", "Deep hydration without greasiness", "Anti-ageing vitamin A & C rich", "Improves skin texture & elasticity"],
-    ingredients: ["Rosa Canina (Rosehip) Seed Oil 100%", "Cold-pressed, unrefined, hexane-free"],
-    usage: ["Apply 3–4 drops to clean face & neck", "Gently massage until absorbed", "Use morning and evening", "Can be layered under moisturiser"],
-    aiReason: "Rosehip oil's natural trans-retinoic acid (vitamin A) is clinically proven to reduce fine lines and scars. It's a rare plant oil that combines anti-ageing, brightening, and hydrating benefits — without synthetic retinoids.",
-    aiTags: ["Anti-Ageing", "Brightening", "Scar Reduction", "Luxury Skincare"],
-  },
-  {
-    id: 7, name: "Tulsi Green Tea", price: 179, mrp: 229, rating: 4.7, reviews: 160,
-    tag: null, category: "Herbal Tea", icon: "🍵", image: "/images/tulsi-tea.png",
-    images: ["/images/tulsi-tea.png", "/images/moringa.png", "/images/ashwagandha.png"],
-    inStock: true, qty: 25, unit: "bags",
-    desc: "A sacred Ayurvedic blend of holy basil (tulsi) and hand-picked green tea leaves. Naturally light in caffeine, rich in adaptogens, and bursting with antioxidants.",
-    benefits: ["Strengthens immune system", "Reduces stress & mental fatigue", "Rich in antioxidants & polyphenols", "Supports respiratory health", "Light caffeine — no jitters"],
-    ingredients: ["Organic Tulsi (Holy Basil) Leaves", "Organic Green Tea Leaves", "Natural Lemon Essence"],
-    usage: ["Steep 1 bag in 200ml hot water (85°C) for 2–3 mins", "Do not over-brew to avoid bitterness", "Enjoy 2–3 cups daily", "Add honey or lemon to taste"],
-    aiReason: "Tulsi is revered as the 'Queen of Herbs' in Ayurveda for its adaptogenic and antimicrobial properties. Combined with green tea's EGCG antioxidants, this blend delivers calm energy and immune support in every cup.",
-    aiTags: ["Immunity", "Stress Relief", "Antioxidant", "Caffeine-Light"],
-  },
-  {
-    id: 8, name: "Amla Hair Serum", price: 329, mrp: 449, rating: 4.6, reviews: 140,
-    tag: "Sale", category: "Hair Care", icon: "💧", image: "/images/amla-serum.png",
-    images: ["/images/amla-serum.png", "/images/rosehip.png", "/images/neem-facewash.png"],
-    inStock: false, qty: 50, unit: "ml",
-    desc: "Amla (Indian gooseberry) & bhringraj hair serum infused with redensyl & biotin. Clinically shown to reduce hair fall by 47% and stimulate new hair growth.",
-    benefits: ["Reduces hair fall by up to 47%", "Stimulates new hair follicle growth", "Strengthens hair from the root", "Adds natural shine & lustre", "Nourishes dry, damaged scalp"],
-    ingredients: ["Amla (Phyllanthus emblica) Extract", "Bhringraj Extract", "Redensyl® 3%", "Biotin", "Argan Oil", "Keratin Proteins"],
-    usage: ["Apply 4–6 drops to scalp on damp hair", "Massage gently for 2 minutes", "Leave in — do not rinse", "Use daily for best results"],
-    aiReason: "Amla has the highest natural vitamin C content of any fruit and is scientifically validated for hair growth. Paired with Redensyl® — a clinically proven alternative to minoxidil — this serum addresses hair thinning at the follicular level.",
-    aiTags: ["Hair Growth", "Hair Fall", "Scalp Health", "Strengthening"],
-  },
-];
+import { ALL_PRODUCTS as BASE_PRODUCTS } from "../data/products.js";
+
+const DETAILED_OVERRIDES = {
+  1: { images: ["/images/ashwagandha.png", "/images/triphala.png", "/images/moringa.png"], qty: 60, unit: "grams", benefits: ["Reduces stress & anxiety by 44%", "Improves strength & endurance", "Supports healthy thyroid function", "Enhances cognitive function & memory", "Boosts testosterone & male vitality"], ingredients: ["KSM-66 Ashwagandha Root Extract 500mg", "Black Pepper Extract (Piperine) 5mg", "Organic Rice Flour (filler)", "Vegetable Capsule Shell"], usage: ["Take 1–2 capsules daily after meals", "Best taken with warm milk or water", "Use consistently for 8–12 weeks for optimal results", "Avoid if pregnant or breastfeeding"], aiReason: "Ashwagandha is a top adaptogen for stress, low energy, and hormonal balance. Based on your interest in wellness, this root extract directly targets cortisol regulation while supporting adrenal health — making it ideal for modern high-stress lifestyles.", aiTags: ["Stress Relief", "Energy Boost", "Hormonal Balance", "Adaptogen"] },
+  2: { images: ["/images/turmeric.png", "/images/moringa.png", "/images/ashwagandha.png"], qty: 60, unit: "capsules", benefits: ["Powerful anti-inflammatory action", "Supports joint health & mobility", "Rich in antioxidants", "Aids digestion & gut health", "Supports healthy liver function"], ingredients: ["Turmeric Root Extract (95% curcuminoids) 500mg", "BioPerine® Black Pepper 5mg", "Ginger Root Extract 50mg", "Vegetable Capsule"], usage: ["Take 2 capsules daily with meals", "Pair with a healthy fat for best absorption", "Consistent use for 4+ weeks recommended"], aiReason: "Curcumin in turmeric is one of the most researched anti-inflammatory compounds. It's ideal for joint pain, gut inflammation, and oxidative stress — combined with BioPerine® for superior bioavailability.", aiTags: ["Anti-Inflammatory", "Joint Health", "Antioxidant", "Gut Health"] },
+  3: { images: ["/images/moringa.png", "/images/ashwagandha.png", "/images/turmeric.png"], qty: 100, unit: "grams", benefits: ["92+ essential nutrients in one dose", "Rich in iron — fights anaemia", "Powerful detoxification support", "Supports healthy blood sugar", "Complete plant-based protein source"], ingredients: ["Organic Moringa Oleifera Leaf Powder 100%", "No additives, fillers, or preservatives"], usage: ["Add 1 tsp to smoothies, juices or warm water", "Mix into yoghurt or oatmeal", "Start with half teaspoon and build up gradually"], aiReason: "Moringa is the most nutrient-dense plant on Earth. For anyone focused on nutrition, immunity, or iron intake — moringa delivers more vitamin C than oranges, more calcium than milk, and more protein than eggs per gram.", aiTags: ["Superfood", "Iron Rich", "Immunity", "Detox"] },
+  4: { images: ["/images/neem-facewash.png", "/images/rosehip.png", "/images/moringa.png"], qty: 100, unit: "ml", benefits: ["Fights acne & pimple-causing bacteria", "Unclogs pores and removes excess oil", "Anti-bacterial & anti-fungal properties", "Suitable for sensitive skin", "Reduces blackheads & whiteheads"], ingredients: ["Neem Leaf Extract", "Tea Tree Essential Oil", "Aloe Vera Gel", "Glycerin", "Vitamin E", "Aqua"], usage: ["Apply to wet face & neck", "Massage gently in circular motions for 60 seconds", "Rinse thoroughly with lukewarm water", "Use twice daily for best results"], aiReason: "Neem has been used in Ayurveda for over 4000 years as a natural antibiotic for skin. Combined with tea tree oil, this face wash targets acne at the root — without the harsh dryness of chemical alternatives.", aiTags: ["Anti-Acne", "Pore Care", "Natural Cleanser", "Sensitive Skin"] },
+  5: { images: ["/images/triphala.png", "/images/ashwagandha.png", "/images/moringa.png"], qty: 100, unit: "grams", benefits: ["Gently relieves constipation", "Supports healthy gut microbiome", "Natural full-body detox", "Rich in vitamin C (Amalaki)", "Supports eye health"], ingredients: ["Amalaki (Emblica officinalis) 33.3%", "Bibhitaki (Terminalia bellirica) 33.3%", "Haritaki (Terminalia chebula) 33.3%"], usage: ["Mix 1 tsp in warm water at bedtime", "Or take with honey in the morning", "Start with a smaller dose and increase gradually", "Not recommended during pregnancy"], aiReason: "Triphala is a cornerstone Ayurvedic formula with clinical evidence supporting its use for IBS, constipation, and gut microbiome health. It gently cleanses without dependency — unlike conventional laxatives.", aiTags: ["Digestive Health", "Detox", "Gut Microbiome", "Ayurvedic"] },
+  6: { images: ["/images/rosehip.png", "/images/neem-facewash.png", "/images/moringa.png"], qty: 30, unit: "ml", benefits: ["Reduces scars & stretch marks", "Fades hyperpigmentation & dark spots", "Deep hydration without greasiness", "Anti-ageing vitamin A & C rich", "Improves skin texture & elasticity"], ingredients: ["Rosa Canina (Rosehip) Seed Oil 100%", "Cold-pressed, unrefined, hexane-free"], usage: ["Apply 3–4 drops to clean face & neck", "Gently massage until absorbed", "Use morning and evening", "Can be layered under moisturiser"], aiReason: "Rosehip oil's natural trans-retinoic acid (vitamin A) is clinically proven to reduce fine lines and scars. It's a rare plant oil that combines anti-ageing, brightening, and hydrating benefits — without synthetic retinoids.", aiTags: ["Anti-Ageing", "Brightening", "Scar Reduction", "Luxury Skincare"] },
+  7: { images: ["/images/tulsi-tea.png", "/images/moringa.png", "/images/ashwagandha.png"], qty: 25, unit: "bags", benefits: ["Strengthens immune system", "Reduces stress & mental fatigue", "Rich in antioxidants & polyphenols", "Supports respiratory health", "Light caffeine — no jitters"], ingredients: ["Organic Tulsi (Holy Basil) Leaves", "Organic Green Tea Leaves", "Natural Lemon Essence"], usage: ["Steep 1 bag in 200ml hot water (85°C) for 2–3 mins", "Do not over-brew to avoid bitterness", "Enjoy 2–3 cups daily", "Add honey or lemon to taste"], aiReason: "Tulsi is revered as the 'Queen of Herbs' in Ayurveda for its adaptogenic and antimicrobial properties. Combined with green tea's EGCG antioxidants, this blend delivers calm energy and immune support in every cup.", aiTags: ["Immunity", "Stress Relief", "Antioxidant", "Caffeine-Light"] },
+  8: { images: ["/images/amla-serum.png", "/images/rosehip.png", "/images/neem-facewash.png"], qty: 50, unit: "ml", benefits: ["Reduces hair fall by up to 47%", "Stimulates new hair follicle growth", "Strengthens hair from the root", "Adds natural shine & lustre", "Nourishes dry, damaged scalp"], ingredients: ["Amla (Phyllanthus emblica) Extract", "Bhringraj Extract", "Redensyl® 3%", "Biotin", "Argan Oil", "Keratin Proteins"], usage: ["Apply 4–6 drops to scalp on damp hair", "Massage gently for 2 minutes", "Leave in — do not rinse", "Use daily for best results"], aiReason: "Amla has the highest natural vitamin C content of any fruit and is scientifically validated for hair growth. Paired with Redensyl® — a clinically proven alternative to minoxidil — this serum addresses hair thinning at the follicular level.", aiTags: ["Hair Growth", "Hair Fall", "Scalp Health", "Strengthening"] },
+};
+
+const ALL_PRODUCTS = BASE_PRODUCTS.map(p => {
+  if (DETAILED_OVERRIDES[p.id]) {
+    return { ...p, mrp: p.price + Math.round(p.price * 0.25), ...DETAILED_OVERRIDES[p.id] };
+  }
+  return {
+    ...p,
+    mrp: p.price + Math.round(p.price * 0.25),
+    images: [p.image, "/images/moringa.png", "/images/ashwagandha.png"],
+    qty: 1,
+    unit: "pack",
+    benefits: [
+      "100% natural and organic ingredients",
+      "No artificial preservatives or fillers",
+      "Sustainably and ethically sourced",
+      "Carefully tested for purity and quality",
+      "Supports overall well-being and health"
+    ],
+    ingredients: [`Premium ${p.name} Extract 100%`],
+    usage: [
+      "Use as directed on the packaging",
+      "Store in a cool, dry place away from sunlight",
+      "Consult a healthcare professional if unsure"
+    ],
+    aiReason: `Based on your interest in ${p.category.toLowerCase()} and wellness, ${p.name.toLowerCase()} is an excellent addition. It aligns with holistic health practices and provides natural benefits without harsh chemicals.`,
+    aiTags: ["Organic", "Natural", "Wellness", "Authentic"]
+  };
+});
 
 const RELATED_PRODUCTS = ALL_PRODUCTS.slice(0, 5);
 

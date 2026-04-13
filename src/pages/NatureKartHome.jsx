@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, useInView, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
+import { ALL_PRODUCTS } from "../data/products.js";
 
 // ─── Utility ──────────────────────────────────────────────────────────────────
 const useScrolled = () => {
@@ -414,16 +415,7 @@ const Categories = ({ onNavigate }) => (
 );
 
 // ─── 4. FEATURED PRODUCTS ────────────────────────────────────────────────────
-const products = [
-  { id: 1, name: "Ashwagandha Powder",     price: 349, rating: 4.8, reviews: 240, tag: "Bestseller", icon: "🌿", image: "/images/ashwagandha.png"  },
-  { id: 2, name: "Turmeric Gold Capsules", price: 299, rating: 4.7, reviews: 180, tag: "New",        icon: "🟡", image: "/images/turmeric.png"      },
-  { id: 3, name: "Moringa Leaf Extract",   price: 449, rating: 4.9, reviews: 310, tag: "Top Rated",  icon: "🌱", image: "/images/moringa.png"        },
-  { id: 4, name: "Neem Face Wash",         price: 199, rating: 4.5, reviews: 120, tag: null,         icon: "💚", image: "/images/neem-facewash.png"  },
-  { id: 5, name: "Triphala Churna",        price: 249, rating: 4.6, reviews: 95,  tag: null,         icon: "🪴", image: "/images/triphala.png"       },
-  { id: 6, name: "Rose Hip Face Oil",      price: 599, rating: 4.8, reviews: 205, tag: "Premium",    icon: "🌸", image: "/images/rosehip.png"        },
-  { id: 7, name: "Tulsi Green Tea",        price: 179, rating: 4.7, reviews: 160, tag: null,         icon: "🍵", image: "/images/tulsi-tea.png"      },
-  { id: 8, name: "Amla Hair Serum",        price: 329, rating: 4.6, reviews: 140, tag: "Sale",       icon: "💧", image: "/images/amla-serum.png"     },
-];
+const products = ALL_PRODUCTS.slice(0, 8);
 
 const tagColors = {
   Bestseller: "bg-amber-100 text-amber-700",
