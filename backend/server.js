@@ -1,6 +1,6 @@
-const express = require('express');
+const express  = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
+const cors     = require('cors');
 require('dotenv').config();
 
 const app = express();
@@ -8,18 +8,26 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/naturekart', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => console.log('MongoDB Connected')).catch(err => console.log(err));
+/* ── DB ─────────────────────────────────────────────────────────────────────── */
+mongoose
+  .connect(process.env.MONGO_URI || 'mongodb://localhost:27017/naturekart')
+  .then(() => console.log('✅ MongoDB Connected'))
+  .catch(err => console.error('❌ MongoDB Error:', err.message));
 
-const productRoutes = require('./routes/productRoutes');
-const cartRoutes = require('./routes/cartRoutes');
-const orderRoutes = require('./routes/orderRoutes');
+/* ── Routes ─────────────────────────────────────────────────────────────────── */
+app.use('/api/products', require('./routes/productRoutes'));
+app.use('/api/cart',     require('./routes/cartRoutes'));
+app.use('/api/orders',   require('./routes/orderRoutes'));
+app.use('/api/auth',     require('./routes/authRoutes'));
+app.use('/api/wishlist', require('./routes/wishlistRoutes'));
 
-app.use('/api/products', productRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/orders', orderRoutes);
+/* ── Health check ───────────────────────────────────────────────────────────── */
+app.get('/api/health', (req, res) =>
+  res.json({ status: 'ok', time: new Date().toISOString() })
+);
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+/* ── Start ──────────────────────────────────────────────────────────────────── */
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () =>
+  console.log(`🚀 NatureKart backend running → http://localhost:${PORT}`)
+);

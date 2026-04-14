@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../context/CartContext.jsx";
+import { useCart }     from "../context/CartContext.jsx";
+import { useWishlist } from "../context/WishlistContext.jsx";
+import { useAuth }     from "../context/AuthContext.jsx";
 
 // ─── Shared Utilities ──────────────────────────────────────────────────────────
 const FadeUp = ({ children, delay = 0, className = "" }) => {
@@ -44,6 +46,8 @@ const AI_RECS = ALL_PRODUCTS.filter((p) => [3, 1, 6, 10, 16].includes(p.id));
 const Navbar = ({ onNavigate }) => {
   const [scrolled, setScrolled] = useState(false);
   const { cartCount } = useCart();
+  const { wishlist }  = useWishlist();
+  const { user, isLoggedIn } = useAuth();
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -79,12 +83,30 @@ const Navbar = ({ onNavigate }) => {
           </div>
 
           <div className="flex items-center gap-2">
-            {[{ icon: "♡", label: "Wishlist" }, { icon: "👤", label: "Profile" }].map(({ icon, label }) => (
-              <motion.button key={label} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="w-9 h-9 rounded-xl flex items-center justify-center text-stone-500 hover:text-green-700 hover:bg-green-50 transition-all">
-                <span className="text-base">{icon}</span>
-              </motion.button>
-            ))}
-            <motion.button whileHover={{ scale: 1.1 }} onClick={() => navigate("/cart")} className="relative w-9 h-9 rounded-xl flex items-center justify-center text-stone-500 hover:text-green-700 hover:bg-green-50">
+            {/* Wishlist */}
+            <motion.button onClick={() => navigate("/wishlist")}
+              whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+              className="relative w-9 h-9 rounded-xl flex items-center justify-center text-stone-500 hover:text-red-500 hover:bg-red-50 transition-all">
+              <span className="text-base">❤️</span>
+              {wishlist.length > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{wishlist.length}</span>
+              )}
+            </motion.button>
+            {/* Profile / Sign In */}
+            <motion.button onClick={() => navigate(isLoggedIn ? "/profile" : "/login")}
+              whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-stone-500 hover:text-green-700 hover:bg-green-50 transition-all overflow-hidden">
+              {isLoggedIn ? (
+                <div className="w-full h-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm">
+                  {user?.name?.[0]?.toUpperCase() || "U"}
+                </div>
+              ) : (
+                <span className="text-base">👤</span>
+              )}
+            </motion.button>
+            {/* Cart */}
+            <motion.button whileHover={{ scale: 1.1 }} onClick={() => navigate("/cart")}
+              className="relative w-9 h-9 rounded-xl flex items-center justify-center text-stone-500 hover:text-green-700 hover:bg-green-50">
               <span className="text-base">🛒</span>
               {cartCount > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-emerald-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{cartCount}</span>}
             </motion.button>
@@ -98,8 +120,9 @@ const Navbar = ({ onNavigate }) => {
 // ─── Product Card ──────────────────────────────────────────────────────────────
 const ProductCard = ({ product, index = 0, onViewProduct }) => {
   const [added, setAdded] = useState(false);
-  const [wished, setWished] = useState(false);
   const { addToCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
+  const wished = isInWishlist(product.id);
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
@@ -145,7 +168,7 @@ const ProductCard = ({ product, index = 0, onViewProduct }) => {
 
         {/* Wishlist */}
         <motion.button
-          onClick={(e) => { e.stopPropagation(); setWished(!wished); }}
+          onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }}
           whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.85 }}
           className={`absolute top-3 right-3 w-9 h-9 rounded-xl bg-white/90 shadow-md flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 ${wished ? "text-red-500 opacity-100" : "text-stone-400"}`}
         >

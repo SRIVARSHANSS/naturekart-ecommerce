@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, useInView, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../context/CartContext.jsx";
+import { useCart }     from "../context/CartContext.jsx";
+import { useWishlist } from "../context/WishlistContext.jsx";
+import { useAuth }     from "../context/AuthContext.jsx";
 import { ALL_PRODUCTS } from "../data/products.js";
 
 // ─── Utility ──────────────────────────────────────────────────────────────────
@@ -69,18 +71,19 @@ const ImgPlaceholder = ({ className = "", label = "Image", icon = "🌿" }) => (
   </div>
 );
 
-// ─── 1. NAVBAR ────────────────────────────────────────────────────────────────
 const Navbar = ({ onNavigate }) => {
   const scrolled = useScrolled();
   const [menuOpen, setMenuOpen] = useState(false);
-  const { cartCount } = useCart();
+  const { cartCount }  = useCart();
+  const { wishlist }   = useWishlist();
+  const { user, isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
   const navLinks = [
-    { label: "Home", action: () => navigate("/") },
-    { label: "Shop", action: () => navigate("/shop") },
-    { label: "About", action: () => navigate("/") },
-    { label: "Contact", action: () => navigate("/") },
+    { label: "Home",    action: () => navigate("/")    },
+    { label: "Shop",    action: () => navigate("/shop") },
+    { label: "About",   action: () => navigate("/")    },
+    { label: "Contact", action: () => navigate("/")    },
   ];
 
   return (
@@ -134,42 +137,61 @@ const Navbar = ({ onNavigate }) => {
 
           {/* Icons */}
           <div className="hidden md:flex items-center gap-2">
-            {[
-              { icon: "♡", label: "Wishlist", badge: null },
-              { icon: "👤", label: "Profile", badge: null },
-              { icon: "🛒", label: "Cart", action: () => navigate("/cart") },
-            ].map(({ icon, label, badge, action }) => (
-              <motion.button
-                key={label}
-                onClick={action}
-                whileHover={{ scale: 1.1, y: -2 }}
-                whileTap={{ scale: 0.9 }}
-                className={`relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${
-                  scrolled
-                    ? "text-stone-600 hover:text-green-700 hover:bg-green-50"
-                    : "text-white/80 hover:text-white hover:bg-white/15"
-                }`}
-                aria-label={label}
-              >
-                <span className="text-lg">{icon}</span>
-                {label === "Cart" && cartCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-emerald-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
-                    {cartCount}
-                  </span>
-                )}
-              </motion.button>
-            ))}
-            <motion.button
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.95 }}
-              className={`ml-2 px-5 py-2.5 text-sm font-semibold rounded-xl shadow-lg transition-all duration-200 ${
-                scrolled
-                  ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-green-300/40"
-                  : "bg-white/20 backdrop-blur-sm border border-white/30 text-white"
-              }`}
-            >
-              Sign In
+            {/* Wishlist */}
+            <motion.button onClick={() => navigate("/wishlist")}
+              whileHover={{ scale: 1.1, y: -2 }} whileTap={{ scale: 0.9 }}
+              className={`relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${
+                scrolled ? "text-stone-600 hover:text-red-500 hover:bg-red-50" : "text-white/80 hover:text-white hover:bg-white/15"
+              }`} aria-label="Wishlist">
+              <span className="text-lg">❤️</span>
+              {wishlist.length > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+                  {wishlist.length}
+                </span>
+              )}
             </motion.button>
+
+            {/* Profile / Sign In */}
+            <motion.button onClick={() => navigate(isLoggedIn ? "/profile" : "/login")}
+              whileHover={{ scale: 1.1, y: -2 }} whileTap={{ scale: 0.9 }}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 overflow-hidden ${
+                scrolled ? "text-stone-600 hover:text-green-700 hover:bg-green-50" : "text-white/80 hover:text-white hover:bg-white/15"
+              }`} aria-label="Profile">
+              {isLoggedIn ? (
+                <div className="w-full h-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm">
+                  {user?.name?.[0]?.toUpperCase() || "U"}
+                </div>
+              ) : (
+                <span className="text-lg">👤</span>
+              )}
+            </motion.button>
+
+            {/* Cart */}
+            <motion.button onClick={() => navigate("/cart")}
+              whileHover={{ scale: 1.1, y: -2 }} whileTap={{ scale: 0.9 }}
+              className={`relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${
+                scrolled ? "text-stone-600 hover:text-green-700 hover:bg-green-50" : "text-white/80 hover:text-white hover:bg-white/15"
+              }`} aria-label="Cart">
+              <span className="text-lg">🛒</span>
+              {cartCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-emerald-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+                  {cartCount}
+                </span>
+              )}
+            </motion.button>
+
+            {/* Sign In (Hidden if logged in) */}
+            {!isLoggedIn && (
+              <motion.button onClick={() => navigate("/login")}
+                whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.95 }}
+                className={`ml-2 px-5 py-2.5 text-sm font-semibold rounded-xl shadow-lg transition-all duration-200 ${
+                  scrolled
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-green-300/40"
+                    : "bg-white/20 backdrop-blur-sm border border-white/30 text-white"
+                }`}>
+                Sign In
+              </motion.button>
+            )}
           </div>
 
           {/* Mobile Hamburger */}
@@ -211,9 +233,12 @@ const Navbar = ({ onNavigate }) => {
                 {label}
               </button>
             ))}
-            <button className="mt-4 w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold rounded-xl">
-              Sign In
-            </button>
+            {!isLoggedIn && (
+              <button onClick={() => navigate("/login")}
+                className="mt-4 w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold rounded-xl">
+                Sign In
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -437,8 +462,9 @@ const Stars = ({ rating }) => (
 // NAVIGATION: ProductCard accepts onNavigate + onViewProduct to open product detail
 const ProductCard = ({ product, onNavigate, onViewProduct }) => {
   const [added, setAdded] = useState(false);
-  const [wished, setWished] = useState(false);
   const { addToCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
+  const wished = isInWishlist(product.id);
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
@@ -479,7 +505,7 @@ const ProductCard = ({ product, onNavigate, onViewProduct }) => {
         <motion.button
           whileHover={{ scale: 1.2 }}
           whileTap={{ scale: 0.9 }}
-          onClick={(e) => { e.stopPropagation(); setWished(!wished); }}
+          onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }}
           className={`absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-xl flex items-center justify-center shadow-md transition-colors ${wished ? "text-red-500" : "text-stone-400 hover:text-red-400"}`}
         >
           {wished ? "♥" : "♡"}

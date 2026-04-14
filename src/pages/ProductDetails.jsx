@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
-import { useCart } from "../context/CartContext.jsx";
+import { useCart }     from "../context/CartContext.jsx";
+import { useWishlist } from "../context/WishlistContext.jsx";
+import { useAuth }     from "../context/AuthContext.jsx";
 
 // ─── Shared Utilities ──────────────────────────────────────────────────────────
 const FadeUp = ({ children, delay = 0, className = "" }) => {
@@ -92,6 +94,8 @@ const REVIEWS = [
 const Navbar = ({ onNavigate }) => {
   const [scrolled, setScrolled] = useState(false);
   const { cartCount } = useCart();
+  const { wishlist }  = useWishlist();
+  const { user, isLoggedIn } = useAuth();
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -122,11 +126,28 @@ const Navbar = ({ onNavigate }) => {
           </div>
 
           <div className="flex items-center gap-2">
-            {[{ icon: "♡", label: "Wishlist" }, { icon: "👤", label: "Profile" }].map(({ icon, label }) => (
-              <motion.button key={label} whileHover={{ scale: 1.1 }} className="w-9 h-9 rounded-xl flex items-center justify-center text-stone-500 hover:text-green-700 hover:bg-green-50 transition-all">
-                <span className="text-base">{icon}</span>
-              </motion.button>
-            ))}
+            {/* Wishlist */}
+            <motion.button onClick={() => navigate("/wishlist")}
+              whileHover={{ scale: 1.1 }}
+              className="relative w-9 h-9 rounded-xl flex items-center justify-center text-stone-500 hover:text-red-500 hover:bg-red-50 transition-all">
+              <span className="text-base">❤️</span>
+              {wishlist.length > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{wishlist.length}</span>
+              )}
+            </motion.button>
+            {/* Profile / Sign In */}
+            <motion.button onClick={() => navigate(isLoggedIn ? "/profile" : "/login")}
+              whileHover={{ scale: 1.1 }}
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-stone-500 hover:text-green-700 hover:bg-green-50 transition-all overflow-hidden">
+              {isLoggedIn ? (
+                <div className="w-full h-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm">
+                  {user?.name?.[0]?.toUpperCase() || "U"}
+                </div>
+              ) : (
+                <span className="text-base">👤</span>
+              )}
+            </motion.button>
+            {/* Cart */}
             <motion.button whileHover={{ scale: 1.1 }} onClick={() => navigate("/cart")} className="relative w-9 h-9 rounded-xl flex items-center justify-center text-stone-500 hover:text-green-700 hover:bg-green-50">
               <span className="text-base">🛒</span>
               {cartCount > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-emerald-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{cartCount}</span>}
@@ -451,9 +472,10 @@ export default function ProductDetails({ onNavigate, onViewProduct }) {
 
   const [qty, setQty]             = useState(1);
   const [cartAdded, setCartAdded] = useState(false);
-  const [wished, setWished]       = useState(false);
   const [buyLoading, setBuyLoading] = useState(false);
   const { addToCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
+  const wished = isInWishlist(product?.id);
 
   const handleAddToCart = () => {
     if (product) {
@@ -584,7 +606,7 @@ export default function ProductDetails({ onNavigate, onViewProduct }) {
                   ) : "⚡ Buy Now"}
                 </motion.button>
 
-                <motion.button onClick={() => setWished(!wished)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                <motion.button onClick={() => toggleWishlist(product)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                   className={`w-14 h-14 rounded-2xl border-2 flex items-center justify-center text-xl flex-shrink-0 transition-all ${
                     wished ? "border-red-300 bg-red-50 text-red-500" : "border-stone-200 hover:border-red-200 text-stone-400 hover:text-red-400"
                   }`}>

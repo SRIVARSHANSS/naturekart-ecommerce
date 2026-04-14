@@ -1,49 +1,46 @@
 import { useState, useEffect } from "react";
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import NatureKartHome from "./pages/NatureKartHome.jsx";
-import ProductListing from "./pages/ProductListing.jsx";
-import ProductDetails from "./pages/ProductDetails.jsx";
-import CartPage from "./pages/CartPage.jsx";
-import CheckoutPage from "./pages/CheckoutPage.jsx";
+import NatureKartHome    from "./pages/NatureKartHome.jsx";
+import ProductListing    from "./pages/ProductListing.jsx";
+import ProductDetails    from "./pages/ProductDetails.jsx";
+import CartPage          from "./pages/CartPage.jsx";
+import CheckoutPage      from "./pages/CheckoutPage.jsx";
 import OrderConfirmation from "./pages/OrderConfirmation.jsx";
-import Loader from "./components/Loader.jsx";
-import CartPopup from "./components/CartPopup.jsx";
-import { useCart } from "./context/CartContext.jsx";
-import { ALL_PRODUCTS } from "./data/products.js";
+import LoginPage         from "./pages/LoginPage.jsx";
+import RegisterPage      from "./pages/RegisterPage.jsx";
+import ProfilePage       from "./pages/ProfilePage.jsx";
+import WishlistPage      from "./pages/WishlistPage.jsx";
+import OrderTracking     from "./pages/OrderTracking.jsx";
+import Loader            from "./components/Loader.jsx";
+import CartPopup         from "./components/CartPopup.jsx";
+import { useCart }       from "./context/CartContext.jsx";
+import { useAuth }       from "./context/AuthContext.jsx";
+import { ALL_PRODUCTS }  from "./data/products.js";
 
+/* ── Protected Route wrapper ───────────────────────────────────────────────── */
+function ProtectedRoute({ children }) {
+  const { isLoggedIn, loading } = useAuth();
+  if (loading) return null;
+  return isLoggedIn ? children : <Navigate to="/login" replace />;
+}
+
+/* ── App ───────────────────────────────────────────────────────────────────── */
 function App() {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate  = useNavigate();
+  const location  = useLocation();
   const { showCartPopup } = useCart();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]               = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  
+
+  /* scroll to top on route change */
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [location.pathname]);
 
-  useEffect(() => {
-    const handleLinkClick = (e) => {
-      const link = e.target.closest('a');
-      if (link && link.href && link.href.includes('/')) {
-        const path = new URL(link.href).pathname;
-        if (path !== location.pathname) {
-          setLoading(true);
-          setTimeout(() => setLoading(false), 600);
-        }
-      }
-    };
-    document.addEventListener('click', handleLinkClick);
-    return () => document.removeEventListener('click', handleLinkClick);
-  }, [location.pathname]);
-
   const navigatePage = (target) => {
     setLoading(true);
-    setTimeout(() => {
-      navigate(target);
-      setLoading(false);
-    }, 600);
+    setTimeout(() => { navigate(target); setLoading(false); }, 500);
   };
 
   const viewProduct = (product) => {
@@ -52,82 +49,89 @@ function App() {
       setSelectedProduct(product);
       navigate(`/product/${product.id}`);
       setLoading(false);
-    }, 600);
+    }, 500);
   };
 
-  const goToProduct = (id) => {
-    const product = getProductById(id);
-    if (product) {
-      viewProduct(product);
-    }
-  };
-
-  const getProductById = (id) => {
-    const allProducts = getAllProducts();
-    return allProducts.find(p => p.id === parseInt(id));
-  };
-
-  const showLoader = () => {
-    setLoading(true);
-  };
-
-  const hideLoader = () => {
-    setLoading(false);
-  };
+  const getProductById = (id) =>
+    ALL_PRODUCTS.find(p => p.id === parseInt(id));
 
   return (
     <>
       <Loader show={loading} />
       <CartPopup />
+
       <AnimatePresence mode="wait">
-        <Routes>
+        <Routes location={location} key={location.pathname}>
+
+          {/* ── Existing pages (UNCHANGED) ─────────────────────────────── */}
           <Route path="/" element={
-            <NatureKartHome 
-              onNavigate={navigatePage} 
+            <NatureKartHome
+              onNavigate={navigatePage}
               onViewProduct={viewProduct}
-              showLoader={showLoader}
+              showLoader={() => setLoading(true)}
             />
           } />
+
           <Route path="/shop" element={
-            <ProductListing 
-              onNavigate={navigatePage} 
+            <ProductListing
+              onNavigate={navigatePage}
               onViewProduct={viewProduct}
-              showLoader={showLoader}
+              showLoader={() => setLoading(true)}
             />
           } />
+
           <Route path="/product/:id" element={
-            <ProductDetailsWrapper 
-              onNavigate={navigatePage} 
+            <ProductDetailsWrapper
+              onNavigate={navigatePage}
               onViewProduct={viewProduct}
               getProductById={getProductById}
-              showLoader={showLoader}
+              showLoader={() => setLoading(true)}
             />
           } />
-          <Route path="/cart" element={<CartPage onNavigate={navigatePage} />} />
-          <Route path="/checkout" element={<CheckoutPageWrapper hideLoader={hideLoader} />} />
+
+          <Route path="/cart"               element={<CartPage onNavigate={navigatePage} />} />
+          <Route path="/checkout"           element={<CheckoutPageWrapper hideLoader={() => setLoading(false)} />} />
           <Route path="/order-confirmation" element={<OrderConfirmation />} />
+
+          {/* ── New auth pages ──────────────────────────────────────────── */}
+          <Route path="/login"    element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+
+          {/* ── New feature pages ───────────────────────────────────────── */}
+          <Route path="/wishlist" element={<WishlistPage />} />
+          <Route path="/profile"  element={<ProfilePage />} />
+
+          {/* Order tracking — with and without orderId */}
+          <Route path="/order-tracking"          element={<OrderTracking />} />
+          <Route path="/order-tracking/:orderId" element={<OrderTracking />} />
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+
         </Routes>
       </AnimatePresence>
     </>
   );
 }
 
+/* ── Wrappers (unchanged from original) ────────────────────────────────────── */
 function ProductDetailsWrapper({ onNavigate, onViewProduct, getProductById, showLoader }) {
   const location = useLocation();
-  const id = location.pathname.split('/').pop();
-  const product = getProductById ? getProductById(id) : null;
-  return <ProductDetails product={product} onNavigate={onNavigate} onViewProduct={onViewProduct} showLoader={showLoader} />;
+  const id       = location.pathname.split("/").pop();
+  const product  = getProductById ? getProductById(id) : null;
+  return (
+    <ProductDetails
+      product={product}
+      onNavigate={onNavigate}
+      onViewProduct={onViewProduct}
+      showLoader={showLoader}
+    />
+  );
 }
 
 function CheckoutPageWrapper({ hideLoader }) {
-  useEffect(() => {
-    hideLoader();
-  }, [hideLoader]);
+  useEffect(() => { hideLoader(); }, [hideLoader]);
   return <CheckoutPage />;
-}
-
-function getAllProducts() {
-  return ALL_PRODUCTS;
 }
 
 export default App;
