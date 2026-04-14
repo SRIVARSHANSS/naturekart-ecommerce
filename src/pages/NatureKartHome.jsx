@@ -79,6 +79,23 @@ const Navbar = ({ onNavigate }) => {
   const { user, isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
+  /* Hidden admin entry: double-click the 🌿 logo */
+  const clickTimerRef = useRef(null);
+  const handleLogoClick = () => {
+    if (clickTimerRef.current) {
+      // Second click — it's a double-click
+      clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+      navigate('/admin/dashboard');
+    } else {
+      // First click — wait 400 ms for second
+      clickTimerRef.current = setTimeout(() => {
+        clickTimerRef.current = null;
+        navigate('/');
+      }, 400);
+    }
+  };
+
   const navLinks = [
     { label: "Home",    action: () => navigate("/")    },
     { label: "Shop",    action: () => navigate("/shop") },
@@ -100,9 +117,9 @@ const Navbar = ({ onNavigate }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
 
-          {/* Logo */}
+          {/* Logo — double-click secretly opens admin panel */}
           <motion.button
-            onClick={() => navigate("/")}
+            onClick={handleLogoClick}
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.97 }}
             className="flex items-center gap-2 select-none"

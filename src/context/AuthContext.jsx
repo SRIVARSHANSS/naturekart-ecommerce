@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext(null);
-
 export const useAuth = () => useContext(AuthContext);
 
 const API = 'http://localhost:5001/api/auth';
@@ -12,7 +11,6 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken]     = useState(() => localStorage.getItem('nk_token') || null);
   const [loading, setLoading] = useState(true);
 
-  /* restore session on mount */
   useEffect(() => {
     if (token) {
       axios.get(`${API}/me`, { headers: { Authorization: `Bearer ${token}` } })
@@ -56,8 +54,15 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const isAdmin = user?.role === 'admin';
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, register, login, logout, updateProfile, isLoggedIn: !!user }}>
+    <AuthContext.Provider value={{
+      user, token, loading,
+      register, login, logout, updateProfile,
+      isLoggedIn: !!user,
+      isAdmin,
+    }}>
       {children}
     </AuthContext.Provider>
   );

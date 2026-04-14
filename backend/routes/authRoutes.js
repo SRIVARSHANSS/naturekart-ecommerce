@@ -6,8 +6,9 @@ const router = express.Router();
 const SECRET = process.env.JWT_SECRET || 'naturekart_jwt_secret_2024';
 
 /* helpers */
-const sign   = (id)  => jwt.sign({ id }, SECRET, { expiresIn: '7d' });
-const safe   = (u)   => ({ id: u._id, name: u.name, email: u.email, phone: u.phone });
+const sign = (id)  => jwt.sign({ id }, SECRET, { expiresIn: '7d' });
+const safe = (u)   => ({ id: u._id, name: u.name, email: u.email, phone: u.phone, role: u.role });
+
 const authMiddleware = (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
@@ -55,7 +56,7 @@ router.get('/me', authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.userId).select('-password');
     if (!user) return res.status(404).json({ message: 'User not found' });
-    res.json(user);
+    res.json(safe(user));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -66,11 +67,22 @@ router.put('/profile', authMiddleware, async (req, res) => {
   try {
     const { name, phone } = req.body;
     const user = await User.findByIdAndUpdate(
-      req.userId,
-      { name, phone },
-      { new: true, runValidators: true }
+      req.userId, { name, phone }, { new: true, runValidators: true }
     ).select('-password');
-    res.json(user);
+    res.json(safe(user));
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+/* POST /api/auth/make-admin  (dev helper — remove in production) */
+router.post('/make-admin', async (req, res) => {
+  try {
+    const { email, secret } = req.body;
+    if (secret !== 'naturekart_admin_2024') return res.status(403).json({ message: 'Wrong secret' });
+    const user = await User.findOneAndUpdate({ email }, { role: 'admin' }, { new: true });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json({ message: `${user.email} is now an admin`, user: safe(user) });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
