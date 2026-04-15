@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { useCart }     from "../context/CartContext.jsx";
 import { useWishlist } from "../context/WishlistContext.jsx";
 import { useAuth }     from "../context/AuthContext.jsx";
-import { ALL_PRODUCTS } from "../data/products.js";
+import { ALL_PRODUCTS } from "../data/products.js"; // kept as fallback
+import { useProducts } from "../hooks/useProducts.js";
 
 // ─── Utility ──────────────────────────────────────────────────────────────────
 const useScrolled = () => {
@@ -457,7 +458,6 @@ const Categories = ({ onNavigate }) => (
 );
 
 // ─── 4. FEATURED PRODUCTS ────────────────────────────────────────────────────
-const products = ALL_PRODUCTS.slice(0, 8);
 
 const tagColors = {
   Bestseller: "bg-amber-100 text-amber-700",
@@ -560,7 +560,11 @@ const ProductCard = ({ product, onNavigate, onViewProduct }) => {
   );
 };
 
-const FeaturedProducts = ({ onNavigate, onViewProduct }) => (
+const FeaturedProducts = ({ onNavigate, onViewProduct }) => {
+  const { products: liveProducts } = useProducts();
+  const products = liveProducts.length > 0 ? liveProducts.slice(0, 8) : ALL_PRODUCTS.slice(0, 8);
+
+  return (
   <section
     className="py-20 lg:py-28 relative"
     style={{
@@ -589,16 +593,23 @@ const FeaturedProducts = ({ onNavigate, onViewProduct }) => (
         </motion.button>
       </FadeUp>
 
-      <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-        {products.map((p) => (
-          <StaggerItem key={p.id}>
-            <ProductCard product={p} onNavigate={onNavigate} onViewProduct={onViewProduct} />
-          </StaggerItem>
-        ))}
-      </StaggerContainer>
+      {products.length === 0 ? (
+        <div className="flex items-center justify-center h-48">
+          <div className="w-8 h-8 border-2 border-green-300 border-t-green-600 rounded-full animate-spin" />
+        </div>
+      ) : (
+        <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+          {products.map((p) => (
+            <StaggerItem key={p._id || p.id}>
+              <ProductCard product={p} onNavigate={onNavigate} onViewProduct={onViewProduct} />
+            </StaggerItem>
+          ))}
+        </StaggerContainer>
+      )}
     </div>
   </section>
-);
+  );
+};
 
 // ─── 5. AI HEALTH SUGGESTION ─────────────────────────────────────────────────
 const AIBanner = ({ onNavigate }) => {

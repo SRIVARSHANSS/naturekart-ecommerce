@@ -29,7 +29,7 @@ const Stars = ({ rating, size = "sm" }) => (
 );
 
 // ─── All Products Data ─────────────────────────────────────────────────────────
-import { ALL_PRODUCTS } from "../data/products.js";
+import { useProducts } from "../hooks/useProducts.js";
 
 const CATEGORIES = ["All", "Ayurveda", "Supplements", "Skincare", "Herbal Tea", "Hair Care", "Essential Oils"];
 const SORT_OPTIONS = ["Relevance", "Price: Low to High", "Price: High to Low", "Top Rated", "Most Reviewed"];
@@ -40,7 +40,7 @@ const tagColors = {
   Premium:    "bg-purple-100 text-purple-700",
   Sale:       "bg-red-100 text-red-700",
 };
-const AI_RECS = ALL_PRODUCTS.filter((p) => [3, 1, 6, 10, 16].includes(p.id));
+// AI_RECS built dynamically from live products (first 5 high-rated ones)
 
 // ─── Shared Navbar ─────────────────────────────────────────────────────────────
 const Navbar = ({ onNavigate }) => {
@@ -433,6 +433,8 @@ const TopFilterBar = ({ search, setSearch, sortBy, setSortBy, selectedCat, setSe
 // ─── MAIN PRODUCT LISTING PAGE ─────────────────────────────────────────────────
 export default function ProductListing({ onNavigate, onViewProduct }) {
   const navigate = useNavigate();
+  const { products: ALL_PRODUCTS, loading: productsLoading, error: productsError } = useProducts();
+
   const [search, setSearch]         = useState("");
   const [selectedCat, setSelectedCat] = useState("All");
   const [priceRange, setPriceRange] = useState(1000);
@@ -448,7 +450,8 @@ export default function ProductListing({ onNavigate, onViewProduct }) {
     if (p.price > priceRange) return false;
     if (p.rating < minRating) return false;
     if (inStockOnly && !p.inStock) return false;
-    if (search && !p.name.toLowerCase().includes(search.toLowerCase()) && !p.desc.toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !p.name.toLowerCase().includes(search.toLowerCase()) &&
+        !(p.description || p.desc || '').toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   }).sort((a, b) => {
     if (sortBy === "Price: Low to High") return a.price - b.price;

@@ -27,7 +27,7 @@ import CartPopup from "./components/CartPopup.jsx";
 /* Contexts */
 import { useCart }    from "./context/CartContext.jsx";
 import { useAuth }    from "./context/AuthContext.jsx";
-import { ALL_PRODUCTS } from "./data/products.js";
+/* Note: products are now fetched from MongoDB Atlas via /api/products */
 
 /* ── Admin Route Guard ─────────────────────────────────────────────────────── */
 function AdminRoute({ children }) {
@@ -62,7 +62,7 @@ function App() {
     }, 500);
   };
 
-  const getProductById = (id) => ALL_PRODUCTS.find(p => p.id === parseInt(id));
+  /* Products are fetched per-page from the API — no static lookup needed */
 
   return (
     <>
@@ -80,7 +80,7 @@ function App() {
             <ProductListing onNavigate={navigatePage} onViewProduct={viewProduct} showLoader={() => setLoading(true)} />
           } />
           <Route path="/product/:id" element={
-            <ProductDetailsWrapper onNavigate={navigatePage} onViewProduct={viewProduct} getProductById={getProductById} showLoader={() => setLoading(true)} />
+            <ProductDetailsWrapper onNavigate={navigatePage} onViewProduct={viewProduct} showLoader={() => setLoading(true)} />
           } />
           <Route path="/cart"               element={<CartPage onNavigate={navigatePage} />} />
           <Route path="/checkout"           element={<CheckoutPageWrapper hideLoader={() => setLoading(false)} />} />
@@ -107,11 +107,9 @@ function App() {
 }
 
 /* ── Wrappers ──────────────────────────────────────────────────────────────── */
-function ProductDetailsWrapper({ onNavigate, onViewProduct, getProductById, showLoader }) {
-  const location = useLocation();
-  const id       = location.pathname.split("/").pop();
-  const product  = getProductById ? getProductById(id) : null;
-  return <ProductDetails product={product} onNavigate={onNavigate} onViewProduct={onViewProduct} showLoader={showLoader} />;
+function ProductDetailsWrapper({ onNavigate, onViewProduct, showLoader }) {
+  /* ProductDetails fetches its own product from MongoDB via useParams(:id) */
+  return <ProductDetails onNavigate={onNavigate} onViewProduct={onViewProduct} showLoader={showLoader} />;
 }
 
 function CheckoutPageWrapper({ hideLoader }) {

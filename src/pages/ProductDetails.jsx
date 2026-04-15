@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useCart }     from "../context/CartContext.jsx";
 import { useWishlist } from "../context/WishlistContext.jsx";
 import { useAuth }     from "../context/AuthContext.jsx";
+import { useProducts } from "../hooks/useProducts.js";
 
 // ─── Shared Utilities ──────────────────────────────────────────────────────────
 const FadeUp = ({ children, delay = 0, className = "" }) => {
@@ -45,9 +46,11 @@ const DETAILED_OVERRIDES = {
   8: { images: ["/images/amla-serum.png", "/images/rosehip.png", "/images/neem-facewash.png"], qty: 50, unit: "ml", benefits: ["Reduces hair fall by up to 47%", "Stimulates new hair follicle growth", "Strengthens hair from the root", "Adds natural shine & lustre", "Nourishes dry, damaged scalp"], ingredients: ["Amla (Phyllanthus emblica) Extract", "Bhringraj Extract", "Redensyl® 3%", "Biotin", "Argan Oil", "Keratin Proteins"], usage: ["Apply 4–6 drops to scalp on damp hair", "Massage gently for 2 minutes", "Leave in — do not rinse", "Use daily for best results"], aiReason: "Amla has the highest natural vitamin C content of any fruit and is scientifically validated for hair growth. Paired with Redensyl® — a clinically proven alternative to minoxidil — this serum addresses hair thinning at the follicular level.", aiTags: ["Hair Growth", "Hair Fall", "Scalp Health", "Strengthening"] },
 };
 
-const ALL_PRODUCTS = BASE_PRODUCTS.map(p => {
-  if (DETAILED_OVERRIDES[p.id]) {
-    return { ...p, mrp: p.price + Math.round(p.price * 0.25), ...DETAILED_OVERRIDES[p.id] };
+const enrichProduct = (p) => {
+  if (!p) return null;
+  const pid = typeof p.id === 'number' ? p.id : null;
+  if (pid && DETAILED_OVERRIDES[pid]) {
+    return { ...p, mrp: p.price + Math.round(p.price * 0.25), ...DETAILED_OVERRIDES[pid] };
   }
   return {
     ...p,
@@ -55,25 +58,15 @@ const ALL_PRODUCTS = BASE_PRODUCTS.map(p => {
     images: [p.image, "/images/moringa.png", "/images/ashwagandha.png"],
     qty: 1,
     unit: "pack",
-    benefits: [
-      "100% natural and organic ingredients",
-      "No artificial preservatives or fillers",
-      "Sustainably and ethically sourced",
-      "Carefully tested for purity and quality",
-      "Supports overall well-being and health"
-    ],
+    benefits: ["100% natural and organic ingredients", "No artificial preservatives or fillers", "Sustainably and ethically sourced", "Carefully tested for purity and quality", "Supports overall well-being and health"],
     ingredients: [`Premium ${p.name} Extract 100%`],
-    usage: [
-      "Use as directed on the packaging",
-      "Store in a cool, dry place away from sunlight",
-      "Consult a healthcare professional if unsure"
-    ],
-    aiReason: `Based on your interest in ${p.category.toLowerCase()} and wellness, ${p.name.toLowerCase()} is an excellent addition. It aligns with holistic health practices and provides natural benefits without harsh chemicals.`,
+    usage: ["Use as directed on the packaging", "Store in a cool, dry place away from sunlight", "Consult a healthcare professional if unsure"],
+    aiReason: p.aiReason || `${p.name} is an excellent natural wellness product aligned with holistic health practices.`,
     aiTags: ["Organic", "Natural", "Wellness", "Authentic"]
   };
-});
+};
 
-const RELATED_PRODUCTS = ALL_PRODUCTS.slice(0, 5);
+const RELATED_PLACEHOLDER = BASE_PRODUCTS.slice(0, 5).map(p => enrichProduct({ ...p, id: p.id }));
 
 const tagColors = {
   Bestseller: "bg-amber-100 text-amber-700 border-amber-200",
@@ -468,7 +461,16 @@ const RelatedProducts = ({ currentId, onViewProduct }) => {
 export default function ProductDetails({ onNavigate, onViewProduct }) {
   const navigate = useNavigate();
   const { id } = useParams();
-  const product = ALL_PRODUCTS.find(p => p.id === parseInt(id)) || ALL_PRODUCTS[0];
+
+  /* Fetch live products from DB; fall back to static while loading */
+  const { products: liveProducts } = useProducts();
+  const rawProduct = liveProducts.find(p => p._id === id || String(p.id) === String(id))
+    || BASE_PRODUCTS.find(p => p.id === parseInt(id));
+  const product = enrichProduct(rawProduct);
+
+  const RELATED_PRODUCTS = liveProducts.length > 0
+    ? liveProducts.slice(0, 5).map(p => enrichProduct(p))
+    : RELATED_PLACEHOLDER;
 
   const [qty, setQty]             = useState(1);
   const [cartAdded, setCartAdded] = useState(false);
