@@ -98,10 +98,10 @@ const Navbar = ({ onNavigate }) => {
   };
 
   const navLinks = [
-    { label: "Home",    action: () => navigate("/")    },
-    { label: "Shop",    action: () => navigate("/shop") },
-    { label: "About",   action: () => navigate("/")    },
-    { label: "Contact", action: () => navigate("/")    },
+    { label: "Home",    action: () => navigate("/"),        page: "/"        },
+    { label: "Shop",    action: () => navigate("/shop"),     page: "/shop"    },
+    { label: "About",   action: () => navigate("/about"),    page: "/about"   },
+    { label: "Contact", action: () => navigate("/contact"),  page: "/contact" },
   ];
 
   return (
@@ -242,10 +242,10 @@ const Navbar = ({ onNavigate }) => {
             transition={{ duration: 0.3 }}
             className="md:hidden bg-white/95 backdrop-blur-xl border-t border-green-100 px-4 pb-4"
           >
-            {navLinks.map(({ label, page }) => (
+            {navLinks.map(({ label, action, page }) => (
               <button
                 key={label}
-                onClick={() => { onNavigate(page); setMenuOpen(false); }}
+                onClick={() => { action(); setMenuOpen(false); }}
                 className="block w-full text-left py-3 text-stone-700 font-semibold border-b border-stone-100 hover:text-green-700"
               >
                 {label}
