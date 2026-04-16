@@ -14,6 +14,8 @@ import RegisterPage      from "./pages/RegisterPage.jsx";
 import ProfilePage       from "./pages/ProfilePage.jsx";
 import WishlistPage      from "./pages/WishlistPage.jsx";
 import OrderTracking     from "./pages/OrderTracking.jsx";
+import AboutPage         from "./pages/AboutPage.jsx";
+import ContactPage       from "./pages/ContactPage.jsx";
 
 /* Admin pages */
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
@@ -91,6 +93,8 @@ function App() {
           <Route path="/profile"            element={<ProfilePage />} />
           <Route path="/order-tracking"          element={<OrderTracking />} />
           <Route path="/order-tracking/:orderId" element={<OrderTracking />} />
+          <Route path="/about"                   element={<AboutPage />} />
+          <Route path="/contact"                 element={<ContactPage />} />
 
           {/* ── Admin routes (protected) ───────────────────────────────── */}
           <Route path="/admin"           element={<Navigate to="/admin/dashboard" replace />} />

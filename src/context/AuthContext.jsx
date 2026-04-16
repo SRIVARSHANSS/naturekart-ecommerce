@@ -46,6 +46,9 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  /* Called after Google token is verified by our backend */
+  const loginWithGoogle = (tok, usr) => save(tok, usr);
+
   const updateProfile = async (fields) => {
     const { data } = await axios.put(`${API}/profile`, fields, {
       headers: { Authorization: `Bearer ${token}` },
@@ -59,7 +62,7 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={{
       user, token, loading,
-      register, login, logout, updateProfile,
+      register, login, logout, loginWithGoogle, updateProfile,
       isLoggedIn: !!user,
       isAdmin,
     }}>

@@ -1,13 +1,23 @@
 const express = require('express');
 const jwt     = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 const User    = require('../models/User');
 
 const router = express.Router();
 const SECRET = process.env.JWT_SECRET || 'naturekart_jwt_secret_2024';
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 
-/* helpers */
-const sign = (id)  => jwt.sign({ id }, SECRET, { expiresIn: '7d' });
-const safe = (u)   => ({ id: u._id, name: u.name, email: u.email, phone: u.phone, role: u.role });
+/* ── Helpers ───────────────────────────────────────────────────────────────── */
+const sign = (id) => jwt.sign({ id }, SECRET, { expiresIn: '7d' });
+const safe = (u)  => ({
+  id:           u._id,
+  name:         u.name,
+  email:        u.email,
+  phone:        u.phone,
+  role:         u.role,
+  profileImage: u.profileImage,
+  authProvider: u.authProvider,
+});
 
 const authMiddleware = (req, res, next) => {
   try {
@@ -20,6 +30,8 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
+/* ── Local Auth ────────────────────────────────────────────────────────────── */
+
 /* POST /api/auth/register */
 router.post('/register', async (req, res) => {
   try {
@@ -30,7 +42,7 @@ router.post('/register', async (req, res) => {
     if (await User.findOne({ email }))
       return res.status(400).json({ message: 'Email is already registered' });
 
-    const user = await new User({ name, email, password }).save();
+    const user = await new User({ name, email, password, authProvider: 'local' }).save();
     res.status(201).json({ token: sign(user._id), user: safe(user) });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -72,6 +84,75 @@ router.put('/profile', authMiddleware, async (req, res) => {
     res.json(safe(user));
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+});
+
+/* ── Google OAuth ──────────────────────────────────────────────────────────── */
+
+/* POST /api/auth/google */
+router.post('/google', async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) return res.status(400).json({ message: 'No Google credential received' });
+
+    /* Verify Google ID token */
+    const client  = new OAuth2Client(GOOGLE_CLIENT_ID);
+    const ticket  = await client.verifyIdToken({
+      idToken:  credential,
+      audience: GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+
+    const { sub: googleId, email, name, picture: profileImage } = payload;
+
+    /* Find or create user */
+    let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+    if (user) {
+      /* Update Google fields if user registered with email before */
+      if (!user.googleId) {
+        user.googleId     = googleId;
+        user.profileImage = profileImage;
+        user.authProvider = 'google';
+        await user.save();
+      }
+    } else {
+      /* New user — create without password */
+      user = await User.create({
+        name, email, googleId, profileImage,
+        authProvider: 'google',
+        password:     null,
+      });
+    }
+
+    res.json({ token: sign(user._id), user: safe(user) });
+  } catch (err) {
+    console.error('Google auth error:', err.message);
+    res.status(401).json({ message: 'Google login failed. Please try again.' });
+  }
+});
+
+/* POST /api/auth/google-token — receives userInfo from Google access_token flow */
+router.post('/google-token', async (req, res) => {
+  try {
+    const { userInfo } = req.body;
+    if (!userInfo?.email) return res.status(400).json({ message: 'Invalid Google user info' });
+
+    const { sub: googleId, email, name, picture: profileImage } = userInfo;
+
+    let user = await User.findOne({ $or: [{ googleId }, { email }] });
+    if (user) {
+      if (!user.googleId) {
+        user.googleId = googleId; user.profileImage = profileImage; user.authProvider = 'google';
+        await user.save();
+      }
+    } else {
+      user = await User.create({ name, email, googleId, profileImage, authProvider: 'google', password: null });
+    }
+    res.json({ token: sign(user._id), user: safe(user) });
+  } catch (err) {
+    console.error('Google token auth error:', err.message);
+    res.status(401).json({ message: 'Google login failed. Please try again.' });
   }
 });
 
