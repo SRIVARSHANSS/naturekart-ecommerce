@@ -498,7 +498,19 @@ export default function ProductDetails({ onNavigate, onViewProduct }) {
     }
   };
 
-  const discount = Math.round(((product.mrp - product.price) / product.mrp) * 100);
+  /* Show loading state while product is being fetched */
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-stone-50 to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-2 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-stone-400 font-medium">Loading product…</p>
+        </div>
+      </div>
+    );
+  }
+
+  const discount = product.mrp ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-stone-50 to-white font-sans antialiased">

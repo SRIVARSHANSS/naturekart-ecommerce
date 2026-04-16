@@ -312,9 +312,15 @@ const Sidebar = ({ selectedCat, setSelectedCat, priceRange, setPriceRange, minRa
 // ─── AI Suggestion Strip ───────────────────────────────────────────────────────
 const AISuggestionStrip = ({ onViewProduct }) => {
   const scrollRef = useRef(null);
+  const { products } = useProducts();
+  const AI_RECS = products.length > 0
+    ? products.filter(p => p.rating >= 4.5).slice(0, 8)
+    : [];
   const scroll = (dir) => {
     scrollRef.current?.scrollBy({ left: dir * 280, behavior: "smooth" });
   };
+
+  if (AI_RECS.length === 0) return null;
 
   return (
     <FadeUp className="mb-10">
@@ -347,7 +353,7 @@ const AISuggestionStrip = ({ onViewProduct }) => {
         <div ref={scrollRef} className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide relative z-10" style={{ scrollbarWidth: "none" }}>
           {AI_RECS.map((product, i) => (
             <motion.div
-              key={product.id}
+              key={product._id || product.id}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.1 }}
