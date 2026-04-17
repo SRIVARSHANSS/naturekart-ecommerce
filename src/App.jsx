@@ -59,7 +59,9 @@ function App() {
   const viewProduct = (product) => {
     setLoading(true);
     setTimeout(() => {
-      navigate(`/product/${product.id}`);
+      /* Use MongoDB _id; fallback to numeric id for static products */
+      const pid = product._id || product.id;
+      navigate(`/product/${pid}`);
       setLoading(false);
     }, 500);
   };

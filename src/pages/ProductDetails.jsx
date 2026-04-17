@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useCart }     from "../context/CartContext.jsx";
 import { useWishlist } from "../context/WishlistContext.jsx";
 import { useAuth }     from "../context/AuthContext.jsx";
-import { useProducts } from "../hooks/useProducts.js";
+import { getProduct, getProducts } from "../services/api.js";
 
 // ─── Shared Utilities ──────────────────────────────────────────────────────────
 const FadeUp = ({ children, delay = 0, className = "" }) => {
@@ -397,8 +397,8 @@ const ReviewsSection = ({ product }) => {
 };
 
 // ─── Related Products Row ─────────────────────────────────────────────────────
-const RelatedProducts = ({ currentId, onViewProduct }) => {
-  const related = RELATED_PRODUCTS.filter((p) => p.id !== currentId);
+const RelatedProducts = ({ currentId, products = [], onViewProduct }) => {
+  const related = products.filter((p) => String(p._id || p.id) !== String(currentId));
   const scrollRef = useRef(null);
 
   return (
@@ -460,24 +460,37 @@ const RelatedProducts = ({ currentId, onViewProduct }) => {
 // ─── MAIN PRODUCT DETAILS PAGE ────────────────────────────────────────────────
 export default function ProductDetails({ onNavigate, onViewProduct }) {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { id }   = useParams();
 
-  /* Fetch live products from DB; fall back to static while loading */
-  const { products: liveProducts } = useProducts();
-  const rawProduct = liveProducts.find(p => p._id === id || String(p.id) === String(id))
-    || BASE_PRODUCTS.find(p => p.id === parseInt(id));
-  const product = enrichProduct(rawProduct);
-
-  const RELATED_PRODUCTS = liveProducts.length > 0
-    ? liveProducts.slice(0, 5).map(p => enrichProduct(p))
-    : RELATED_PLACEHOLDER;
-
-  const [qty, setQty]             = useState(1);
-  const [cartAdded, setCartAdded] = useState(false);
-  const [buyLoading, setBuyLoading] = useState(false);
+  /* ── All state (must be before any early return) ── */
+  const [rawProduct,   setRawProduct]   = useState(null);
+  const [prodLoading,  setProdLoading]  = useState(true);
+  const [relatedProds, setRelatedProds] = useState(RELATED_PLACEHOLDER);
+  const [qty,          setQty]          = useState(1);
+  const [cartAdded,    setCartAdded]    = useState(false);
+  const [buyLoading,   setBuyLoading]   = useState(false);
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
-  const wished = isInWishlist(product?.id);
+
+  /* ── Fetch single product by _id directly from backend ── */
+  useEffect(() => {
+    if (!id) return;
+    setProdLoading(true);
+    getProduct(id)
+      .then(p  => setRawProduct(p))
+      .catch(() => {
+        const fallback = BASE_PRODUCTS.find(p => p.id === parseInt(id));
+        setRawProduct(fallback || null);
+      })
+      .finally(() => setProdLoading(false));
+
+    getProducts()
+      .then(data => setRelatedProds(data.filter(p => String(p._id) !== String(id)).slice(0, 5).map(p => enrichProduct(p))))
+      .catch(() => setRelatedProds(RELATED_PLACEHOLDER));
+  }, [id]);
+
+  const product = enrichProduct(rawProduct);
+  const wished  = isInWishlist(product?._id || product?.id);
 
   const handleAddToCart = () => {
     if (product) {
@@ -498,14 +511,23 @@ export default function ProductDetails({ onNavigate, onViewProduct }) {
     }
   };
 
-  /* Show loading state while product is being fetched */
-  if (!product) {
+  /* ── Show loading / not found ── */
+  if (prodLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-stone-50 to-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-2 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto mb-4" />
           <p className="text-stone-400 font-medium">Loading product…</p>
         </div>
+      </div>
+    );
+  }
+  if (!product) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <span className="text-6xl">😕</span>
+        <h2 className="text-2xl font-extrabold text-stone-700">Product not found</h2>
+        <button onClick={() => navigate('/shop')} className="px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold">Browse Shop</button>
       </div>
     );
   }
@@ -692,7 +714,7 @@ export default function ProductDetails({ onNavigate, onViewProduct }) {
 
         {/* ── RELATED PRODUCTS ── */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-          <RelatedProducts currentId={product.id} onViewProduct={onViewProduct} />
+          <RelatedProducts currentId={product._id || product.id} products={relatedProds} onViewProduct={onViewProduct} />
         </div>
       </div>
     </div>
