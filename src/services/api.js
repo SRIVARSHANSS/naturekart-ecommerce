@@ -38,6 +38,5 @@ export const adminUpdateOrder    = (id, body) => api.put(`/admin/orders/${id}`, 
 export const adminGetDashboard   = ()         => api.get('/admin/dashboard').then(r => r.data);
 export const adminSeedOrders     = ()         => api.post('/admin/seed-orders', {}).then(r => r.data);
 
-/* Payment — Razorpay */
-export const createRazorpayOrder = (amount)  => api.post('/payment/create-order', { amount }).then(r => r.data);
-export const verifyPayment       = (body)    => api.post('/payment/verify', body).then(r => r.data);
+/* Payment — Google Pay / UPI */
+export const saveUpiOrder = (body) => api.post('/payment/create-upi-order', body).then(r => r.data);
