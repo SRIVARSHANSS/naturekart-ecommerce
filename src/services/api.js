@@ -37,3 +37,7 @@ export const adminGetOrders      = ()         => api.get('/admin/orders').then(r
 export const adminUpdateOrder    = (id, body) => api.put(`/admin/orders/${id}`, body).then(r => r.data);
 export const adminGetDashboard   = ()         => api.get('/admin/dashboard').then(r => r.data);
 export const adminSeedOrders     = ()         => api.post('/admin/seed-orders', {}).then(r => r.data);
+
+/* Payment — Razorpay */
+export const createRazorpayOrder = (amount)  => api.post('/payment/create-order', { amount }).then(r => r.data);
+export const verifyPayment       = (body)    => api.post('/payment/verify', body).then(r => r.data);

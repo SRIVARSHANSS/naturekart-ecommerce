@@ -24,8 +24,11 @@ const orderSchema = new mongoose.Schema({
     enum: ['Placed', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'],
     default: 'Placed',
   },
-  paymentMethod: { type: String, default: 'COD' },
-  userId:        { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  paymentMethod:    { type: String, default: 'Razorpay' },
+  paymentStatus:    { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
+  razorpayOrderId:  { type: String, default: '' },
+  razorpayPaymentId:{ type: String, default: '' },
+  userId:           { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);
