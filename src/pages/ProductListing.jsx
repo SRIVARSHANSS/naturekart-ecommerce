@@ -77,8 +77,9 @@ const Navbar = ({ onNavigate }) => {
           <div className="hidden md:flex items-center gap-1">
             <motion.button onClick={() => navigate("/")} whileHover={{ scale: 1.04 }} className="px-4 py-2 text-sm font-semibold rounded-xl transition-all text-stone-600 hover:text-green-700 hover:bg-green-50">Home</motion.button>
             <motion.button onClick={() => navigate("/shop")} whileHover={{ scale: 1.04 }} className="px-4 py-2 text-sm font-semibold rounded-xl transition-all bg-green-50 text-green-700">Shop</motion.button>
-            <motion.button onClick={() => navigate("/about")}   whileHover={{ scale: 1.04 }} className="px-4 py-2 text-sm font-semibold rounded-xl transition-all text-stone-600 hover:text-green-700 hover:bg-green-50">About</motion.button>
-            <motion.button onClick={() => navigate("/contact")} whileHover={{ scale: 1.04 }} className="px-4 py-2 text-sm font-semibold rounded-xl transition-all text-stone-600 hover:text-green-700 hover:bg-green-50">Contact</motion.button>
+            <motion.button onClick={() => navigate("/about")}         whileHover={{ scale: 1.04 }} className="px-4 py-2 text-sm font-semibold rounded-xl transition-all text-stone-600 hover:text-green-700 hover:bg-green-50">About</motion.button>
+            <motion.button onClick={() => navigate("/contact")}       whileHover={{ scale: 1.04 }} className="px-4 py-2 text-sm font-semibold rounded-xl transition-all text-stone-600 hover:text-green-700 hover:bg-green-50">Contact</motion.button>
+            <motion.button onClick={() => navigate("/ai-assistant")}  whileHover={{ scale: 1.05 }} className="px-4 py-2 text-sm font-bold rounded-xl bg-gradient-to-r from-green-600 to-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-green-200 transition-all">🤖 AI Health</motion.button>
           </div>
 
           <div className="flex items-center gap-2">

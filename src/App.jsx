@@ -16,6 +16,7 @@ import WishlistPage      from "./pages/WishlistPage.jsx";
 import OrderTracking     from "./pages/OrderTracking.jsx";
 import AboutPage         from "./pages/AboutPage.jsx";
 import ContactPage       from "./pages/ContactPage.jsx";
+import AIAssistantPage   from "./pages/AIAssistantPage.jsx";
 
 /* Admin pages */
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
@@ -23,8 +24,9 @@ import AdminProducts  from "./pages/admin/AdminProducts.jsx";
 import AdminOrders    from "./pages/admin/AdminOrders.jsx";
 
 /* Components */
-import Loader    from "./components/Loader.jsx";
-import CartPopup from "./components/CartPopup.jsx";
+import Loader           from "./components/Loader.jsx";
+import CartPopup        from "./components/CartPopup.jsx";
+import AIFloatingWidget from "./components/AIFloatingWidget.jsx";
 
 /* Contexts */
 import { useCart }    from "./context/CartContext.jsx";
@@ -72,6 +74,7 @@ function App() {
     <>
       <Loader show={loading} />
       <CartPopup />
+      <AIFloatingWidget />
 
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
@@ -97,6 +100,7 @@ function App() {
           <Route path="/order-tracking/:orderId" element={<OrderTracking />} />
           <Route path="/about"                   element={<AboutPage />} />
           <Route path="/contact"                 element={<ContactPage />} />
+          <Route path="/ai-assistant"            element={<AIAssistantPage />} />
 
           {/* ── Admin routes (protected) ───────────────────────────────── */}
           <Route path="/admin"           element={<Navigate to="/admin/dashboard" replace />} />

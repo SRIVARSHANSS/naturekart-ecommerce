@@ -40,3 +40,9 @@ export const adminSeedOrders     = ()         => api.post('/admin/seed-orders', 
 
 /* Payment — Google Pay / UPI */
 export const saveUpiOrder = (body) => api.post('/payment/create-upi-order', body).then(r => r.data);
+
+/* AI — NatureBot */
+export const chatWithNatureBot = (message, conversationHistory = []) =>
+  api.post('/ai/chat',       { message, conversationHistory }).then(r => r.data);
+export const quickChatNatureBot = (message, conversationHistory = []) =>
+  api.post('/ai/quick-chat', { message, conversationHistory }).then(r => r.data);

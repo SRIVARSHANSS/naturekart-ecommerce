@@ -98,10 +98,11 @@ const Navbar = ({ onNavigate }) => {
   };
 
   const navLinks = [
-    { label: "Home",    action: () => navigate("/"),        page: "/"        },
-    { label: "Shop",    action: () => navigate("/shop"),     page: "/shop"    },
-    { label: "About",   action: () => navigate("/about"),    page: "/about"   },
-    { label: "Contact", action: () => navigate("/contact"),  page: "/contact" },
+    { label: "Home",         action: () => navigate("/"),             page: "/"             },
+    { label: "Shop",         action: () => navigate("/shop"),         page: "/shop"         },
+    { label: "About",        action: () => navigate("/about"),        page: "/about"        },
+    { label: "Contact",      action: () => navigate("/contact"),      page: "/contact"      },
+    { label: "🤖 AI Health", action: () => navigate("/ai-assistant"), page: "/ai-assistant", pill: true },
   ];
 
   return (
@@ -136,17 +137,20 @@ const Navbar = ({ onNavigate }) => {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-1">
-            {navLinks.map(({ label, action }) => (
+            {navLinks.map(({ label, action, pill }) => (
               <motion.button
                 key={label}
                 onClick={action}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-200 ${
-                  scrolled
-                    ? "text-stone-600 hover:text-green-700 hover:bg-green-50"
-                    : "text-white/90 hover:text-white hover:bg-white/15"
-                }`}
+                className={pill
+                  ? `px-4 py-2 text-sm font-bold rounded-xl bg-gradient-to-r from-green-600 to-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-green-300/50 transition-all`
+                  : `px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-200 ${
+                    scrolled
+                      ? "text-stone-600 hover:text-green-700 hover:bg-green-50"
+                      : "text-white/90 hover:text-white hover:bg-white/15"
+                  }`
+                }
               >
                 {label}
               </motion.button>

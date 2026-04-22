@@ -12,6 +12,8 @@ const productSchema = new mongoose.Schema({
   reviews:     { type: Number, default: 0 },
   inStock:     { type: Boolean, default: true },
   aiReason:    { type: String, default: '' },
+  benefits:    [String],
+  tags:        [String],
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);
