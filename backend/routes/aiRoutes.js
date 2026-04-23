@@ -9,7 +9,10 @@ const Product = require('../models/Product');
 
 const router = express.Router();
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({ 
+  apiKey: process.env.GEMINI_API_KEY,
+  baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/'
+});
 
 /* ── Category → keyword mapping for MongoDB product search ─────────────────── */
 const CATEGORY_KEYWORDS = {
@@ -114,7 +117,7 @@ router.post('/chat', async (req, res) => {
     ];
 
     const completion = await openai.chat.completions.create({
-      model:       'gpt-4o-mini',
+      model:       'gemini-1.5-flash',
       messages,
       max_tokens:  400,
       temperature: 0.7,
@@ -158,7 +161,7 @@ router.post('/quick-chat', async (req, res) => {
     ];
 
     const completion = await openai.chat.completions.create({
-      model:       'gpt-4o-mini',
+      model:       'gemini-1.5-flash',
       messages,
       max_tokens:  150,
       temperature: 0.7,
