@@ -6,6 +6,7 @@ import { useWishlist } from "../context/WishlistContext.jsx";
 import { useAuth }     from "../context/AuthContext.jsx";
 import { ALL_PRODUCTS } from "../data/products.js"; // kept as fallback
 import { useProducts } from "../hooks/useProducts.js";
+import SearchOverlay from "../components/SearchOverlay.jsx";
 
 // ─── Utility ──────────────────────────────────────────────────────────────────
 const useScrolled = () => {
@@ -134,6 +135,11 @@ const Navbar = ({ onNavigate }) => {
               Nature<span style={{ color: scrolled ? "#10b981" : "#6ee7b7" }}>Kart</span>
             </span>
           </motion.button>
+
+          {/* Search bar inside Navigation Bar */}
+          <div className="hidden md:block flex-1 max-w-[280px] lg:max-w-[340px] mx-4">
+            <SearchOverlay />
+          </div>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-1">

@@ -16,4 +16,14 @@ const productSchema = new mongoose.Schema({
   tags:        [String],
 }, { timestamps: true });
 
+/* Hook search indexing service */
+productSchema.post('save', function (doc) {
+  try {
+    const { indexProduct } = require('../services/elasticSearchService');
+    indexProduct(doc);
+  } catch (err) {
+    console.error('Failed to trigger ES indexing:', err.message);
+  }
+});
+
 module.exports = mongoose.model('Product', productSchema);

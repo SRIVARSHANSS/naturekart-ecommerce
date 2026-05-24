@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
 
+const { protect } = require('../middleware/auth');
+
 function generateOrderId() {
   return 'NK' + Date.now() + Math.random().toString(36).substr(2, 6).toUpperCase();
 }
@@ -11,6 +13,15 @@ function getDeliveryDate() {
   date.setDate(date.getDate() + 5);
   return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
+
+router.get('/user', protect, async (req, res) => {
+  try {
+    const orders = await Order.find({ userId: req.userId }).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 router.post('/', async (req, res) => {
   try {

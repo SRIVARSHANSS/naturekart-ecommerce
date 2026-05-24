@@ -2,7 +2,9 @@ const express = require('express');
 const Product = require('../models/Product');
 const Order   = require('../models/Order');
 const User    = require('../models/User');
+const Return  = require('../models/Return');
 const { adminOnly } = require('../middleware/auth');
+const { sendReturnEmail } = require('../utils/emailService');
 
 const router = express.Router();
 
@@ -132,6 +134,64 @@ router.post('/seed-orders', adminOnly, async (req, res) => {
     await Order.insertMany(orders);
     res.json({ message: 'Seeded 20 demo orders', count: 20 });
   } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+/* ── RETURNS MANAGEMENT ────────────────────────────────────────────────────── */
+router.get('/returns', adminOnly, async (req, res) => {
+  try {
+    const returns = await Return.find().sort({ createdAt: -1 });
+    res.json(returns);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.put('/returns/:id', adminOnly, async (req, res) => {
+  try {
+    const { status, adminRemarks, pickupDate } = req.body;
+    const returnRequest = await Return.findById(req.params.id);
+    if (!returnRequest) return res.status(404).json({ message: 'Return request not found' });
+
+    if (status) returnRequest.status = status;
+    if (adminRemarks !== undefined) returnRequest.adminRemarks = adminRemarks;
+    if (pickupDate !== undefined) returnRequest.pickupDate = pickupDate;
+
+    await returnRequest.save();
+
+    // Fetch user & order for notification
+    const user = await User.findById(returnRequest.userId);
+    const order = await Order.findOne({ orderId: returnRequest.orderId });
+    const emailToNotify = order?.customer?.email || user?.email;
+
+    if (emailToNotify) {
+      let subject = `Return request updated: ${returnRequest.status}`;
+      let title = `Return Request Status: ${returnRequest.status}`;
+      let body = `The return request for your product "${returnRequest.productName}" (Order #${returnRequest.orderId}) has been updated by the store administrator to: **${returnRequest.status}**.`;
+      
+      if (adminRemarks) {
+        body += `\n\n**Admin Remarks:** ${adminRemarks}`;
+      }
+
+      let trackingInfo = '';
+      if (status === 'Pickup Scheduled' && pickupDate) {
+        const formattedDate = new Date(pickupDate).toLocaleDateString('en-IN', {
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+        trackingInfo = `<p style="margin:0;font-size:14px;color:#78716c;"><strong>Scheduled Pickup Date:</strong> ${formattedDate}</p>`;
+        body += `\n\nOur delivery partner has been assigned to pick up the product on **${formattedDate}**. Please keep the item packed and ready with its original tags.`;
+      } else if (status === 'Refund Completed') {
+        trackingInfo = `<p style="margin:0;font-size:14px;color:#78716c;"><strong>Refunded Amount:</strong> ₹${returnRequest.refundAmount}</p>
+                        <p style="margin:0 0 8px;font-size:14px;color:#78716c;"><strong>Refunded To:</strong> ${returnRequest.refundMethod}</p>`;
+        body += `\n\nA refund of **₹${returnRequest.refundAmount}** has been processed via **${returnRequest.refundMethod}**. It should reflect in your account shortly.`;
+      }
+
+      await sendReturnEmail(emailToNotify, subject, title, body, returnRequest.status, trackingInfo);
+    }
+
+    res.json({ success: true, message: 'Return status updated successfully', returnRequest });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
 });
 
 module.exports = router;

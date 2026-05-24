@@ -11,15 +11,26 @@ const addressSchema = new mongoose.Schema({
 const userSchema = new mongoose.Schema({
   name:         { type: String, required: true, trim: true },
   email:        { type: String, required: true, unique: true, lowercase: true, trim: true },
-  password:     { type: String, default: null, minlength: 6, select: true },
+  password:     { type: String, default: null, select: true },
   phone:        { type: String, default: '' },
+  mobile:       { type: String, default: '' },
   role:         { type: String, enum: ['user', 'admin'], default: 'user' },
   addresses:    [addressSchema],
+
+  /* Email Verification */
+  isVerified:   { type: Boolean, default: false },
+  otp:          { type: String, default: null },
+  otpExpiry:    { type: Date,   default: null },
+
+  /* Password Reset */
+  resetOtp:         { type: String, default: null },
+  resetOtpExpiry:   { type: Date,   default: null },
 
   /* Google OAuth fields */
   googleId:     { type: String, default: null },
   profileImage: { type: String, default: null },
   authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
+  recentSearches: [{ type: String, trim: true }],
 }, { timestamps: true });
 
 /* Only hash password for local auth users */

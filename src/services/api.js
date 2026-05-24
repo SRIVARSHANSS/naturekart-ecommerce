@@ -23,10 +23,18 @@ export const getProduct   = (id) => api.get(`/products/${id}`).then(r => r.data)
 export const createOrder  = (data) => api.post('/orders', data).then(r => r.data);
 export const getOrder     = (id)   => api.get(`/orders/${id}`).then(r => r.data);
 
-/* Auth */
+/* Auth — Core */
 export const loginApi     = (body) => api.post('/auth/login',    body).then(r => r.data);
 export const registerApi  = (body) => api.post('/auth/register', body).then(r => r.data);
 export const getMeApi     = ()     => api.get('/auth/me').then(r => r.data);
+
+/* Auth — OTP Verification */
+export const verifyOtpApi  = (body) => api.post('/auth/verify-otp',   body).then(r => r.data);
+export const resendOtpApi  = (body) => api.post('/auth/resend-otp',   body).then(r => r.data);
+
+/* Auth — Forgot / Reset Password */
+export const forgotPasswordApi = (body) => api.post('/auth/forgot-password', body).then(r => r.data);
+export const resetPasswordApi  = (body) => api.post('/auth/reset-password',  body).then(r => r.data);
 
 /* Admin */
 export const adminGetProducts    = ()         => api.get('/admin/products').then(r => r.data);
@@ -37,6 +45,20 @@ export const adminGetOrders      = ()         => api.get('/admin/orders').then(r
 export const adminUpdateOrder    = (id, body) => api.put(`/admin/orders/${id}`, body).then(r => r.data);
 export const adminGetDashboard   = ()         => api.get('/admin/dashboard').then(r => r.data);
 export const adminSeedOrders     = ()         => api.post('/admin/seed-orders', {}).then(r => r.data);
+
+/* Search & Suggestions */
+export const searchProductsApi      = (q)        => api.get(`/search?q=${encodeURIComponent(q)}`).then(r => r.data);
+export const getSuggestionsApi      = (q)        => api.get(`/search/suggestions?q=${encodeURIComponent(q)}`).then(r => r.data);
+export const getRecentSearchesApi   = ()         => api.get('/search/recent').then(r => r.data);
+export const getTrendingSearchesApi = ()         => api.get('/search/trending').then(r => r.data);
+export const clearRecentSearchesApi = (query)    => api.delete('/search/recent', { data: { query } }).then(r => r.data);
+
+/* Returns & Refunds */
+export const getUserOrders       = ()         => api.get('/orders/user').then(r => r.data);
+export const createReturn        = (body)     => api.post('/returns/create', body).then(r => r.data);
+export const getUserReturns      = ()         => api.get('/returns/user').then(r => r.data);
+export const adminGetReturns     = ()         => api.get('/admin/returns').then(r => r.data);
+export const adminUpdateReturn   = (id, body) => api.put(`/admin/returns/${id}`, body).then(r => r.data);
 
 /* Payment — Google Pay / UPI */
 export const saveUpiOrder = (body) => api.post('/payment/create-upi-order', body).then(r => r.data);

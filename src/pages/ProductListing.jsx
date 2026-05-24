@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useCart }     from "../context/CartContext.jsx";
 import { useWishlist } from "../context/WishlistContext.jsx";
 import { useAuth }     from "../context/AuthContext.jsx";
+import SearchOverlay from "../components/SearchOverlay.jsx";
 
 // ─── Shared Utilities ──────────────────────────────────────────────────────────
 const FadeUp = ({ children, delay = 0, className = "" }) => {
@@ -73,6 +74,11 @@ const Navbar = ({ onNavigate }) => {
             </div>
             <span className="text-lg font-bold text-green-800 tracking-tight">Nature<span className="text-emerald-500">Kart</span></span>
           </motion.button>
+
+          {/* Search bar inside Navigation Bar */}
+          <div className="hidden md:block flex-1 max-w-[280px] lg:max-w-[340px] mx-4">
+            <SearchOverlay />
+          </div>
 
           <div className="hidden md:flex items-center gap-1">
             <motion.button onClick={() => navigate("/")} whileHover={{ scale: 1.04 }} className="px-4 py-2 text-sm font-semibold rounded-xl transition-all text-stone-600 hover:text-green-700 hover:bg-green-50">Home</motion.button>
@@ -439,9 +445,18 @@ const TopFilterBar = ({ search, setSearch, sortBy, setSortBy, selectedCat, setSe
 // ─── MAIN PRODUCT LISTING PAGE ─────────────────────────────────────────────────
 export default function ProductListing({ onNavigate, onViewProduct }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { products: ALL_PRODUCTS, loading: productsLoading, error: productsError } = useProducts();
 
   const [search, setSearch]         = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const searchQuery = params.get('search');
+    if (searchQuery !== null) {
+      setSearch(searchQuery);
+    }
+  }, [location.search]);
   const [selectedCat, setSelectedCat] = useState("All");
   const [priceRange, setPriceRange] = useState(1000);
   const [minRating, setMinRating]   = useState(0);

@@ -22,6 +22,7 @@ import AIAssistantPage   from "./pages/AIAssistantPage.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AdminProducts  from "./pages/admin/AdminProducts.jsx";
 import AdminOrders    from "./pages/admin/AdminOrders.jsx";
+import AdminReturns   from "./pages/admin/AdminReturns.jsx";
 
 /* Components */
 import Loader           from "./components/Loader.jsx";
@@ -107,6 +108,7 @@ function App() {
           <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/products"  element={<AdminRoute><AdminProducts /></AdminRoute>} />
           <Route path="/admin/orders"    element={<AdminRoute><AdminOrders /></AdminRoute>} />
+          <Route path="/admin/returns"   element={<AdminRoute><AdminReturns /></AdminRoute>} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
