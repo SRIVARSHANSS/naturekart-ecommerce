@@ -98,7 +98,7 @@ export default function AdminDashboard() {
     </AdminLayout>
   );
 
-  const { totalSales, totalOrders, totalProducts, totalUsers, recentOrders = [], revenueData = [], statusData = [] } = data || {};
+  const { totalSales, totalOrders, totalProducts, totalUsers, deliveredCount = 0, refundRequests = 0, recentOrders = [], revenueData = [], statusData = [] } = data || {};
 
   return (
     <AdminLayout>
@@ -118,11 +118,13 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard icon="💰" label="Total Revenue"  value={totalSales}    prefix="₹" color="#10b981" delay={0}    />
-        <StatCard icon="📦" label="Total Orders"   value={totalOrders}                 color="#3b82f6" delay={0.1}  />
-        <StatCard icon="🏷️" label="Products"       value={totalProducts}               color="#8b5cf6" delay={0.2}  />
-        <StatCard icon="👥" label="Customers"       value={totalUsers}                  color="#f59e0b" delay={0.3}  />
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <StatCard icon="💰" label="Total Revenue"     value={totalSales}       prefix="₹" color="#10b981" delay={0}    />
+        <StatCard icon="📦" label="Total Orders"      value={totalOrders}                  color="#3b82f6" delay={0.08} />
+        <StatCard icon="✅" label="Delivered"          value={deliveredCount}               color="#34d399" delay={0.16} />
+        <StatCard icon="↩️" label="Refund Requests"   value={refundRequests}               color="#f472b6" delay={0.24} />
+        <StatCard icon="🏷️" label="Products"          value={totalProducts}                color="#8b5cf6" delay={0.32} />
+        <StatCard icon="👥" label="Customers"          value={totalUsers}                   color="#f59e0b" delay={0.4}  />
       </div>
 
       {/* Charts */}

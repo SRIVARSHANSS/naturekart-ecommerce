@@ -1,128 +1,252 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import QRCode from 'react-qr-code';
-import { useCart }  from '../context/CartContext';
-import { useAuth }  from '../context/AuthContext';
-import { saveUpiOrder } from '../services/api';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import {
+  getDeliveryOptions,
+  createRazorpayOrder,
+  verifyRazorpayPayment,
+  getRazorpayKey,
+} from '../services/api';
 
-const MERCHANT_UPI  = import.meta.env.VITE_MERCHANT_UPI_ID  || 'naturekart@upi';
-const MERCHANT_NAME = import.meta.env.VITE_MERCHANT_NAME     || 'NatureKart';
+/* ── Load Razorpay SDK ── */
+const loadRazorpay = () =>
+  new Promise(resolve => {
+    if (window.Razorpay) return resolve(true);
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
 
-/* ── Build UPI Deep Link ── */
-const buildUpiLink = (amount, orderId, note = '') =>
-  `upi://pay?pa=${encodeURIComponent(MERCHANT_UPI)}&pn=${encodeURIComponent(MERCHANT_NAME)}&am=${amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(note || 'NatureKart Order ' + orderId)}`;
-
-/* ── Floating Label Input ── */
-const Field = ({ label, name, type = 'text', value, onChange, required, placeholder, textarea }) => (
+/* ── Field component ── */
+const Field = ({ label, name, type = 'text', value, onChange, error, placeholder, textarea, required }) => (
   <div>
     <label className="block text-xs font-bold text-stone-500 mb-1 uppercase tracking-wide">
       {label}{required && <span className="text-red-400 ml-0.5">*</span>}
     </label>
     {textarea ? (
-      <textarea name={name} value={value} onChange={onChange} required={required} rows={3}
-        placeholder={placeholder}
-        className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-green-400 resize-none text-sm bg-stone-50 focus:bg-white transition-all" />
+      <textarea name={name} value={value} onChange={onChange} rows={3} placeholder={placeholder}
+        className={`w-full px-4 py-3 rounded-xl border text-sm bg-stone-50 focus:bg-white transition-all resize-none focus:outline-none focus:ring-2 ${error ? 'border-red-300 focus:ring-red-300' : 'border-stone-200 focus:ring-green-400'}`} />
     ) : (
-      <input type={type} name={name} value={value} onChange={onChange} required={required}
-        placeholder={placeholder}
-        className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm bg-stone-50 focus:bg-white transition-all" />
+      <input type={type} name={name} value={value} onChange={onChange} placeholder={placeholder}
+        className={`w-full px-4 py-3 rounded-xl border text-sm bg-stone-50 focus:bg-white transition-all focus:outline-none focus:ring-2 ${error ? 'border-red-300 focus:ring-red-300' : 'border-stone-200 focus:ring-green-400'}`} />
     )}
+    {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
   </div>
 );
 
-/* ── Main ── */
+/* ── Step indicator ── */
+const StepBar = ({ step }) => {
+  const steps = [
+    { key: 'address',  label: 'Address',  icon: '📍', num: 1 },
+    { key: 'delivery', label: 'Delivery', icon: '🚚', num: 2 },
+    { key: 'payment',  label: 'Payment',  icon: '💳', num: 3 },
+  ];
+  const idx = steps.findIndex(s => s.key === step);
+  return (
+    <div className="flex items-center justify-center gap-0 mb-10">
+      {steps.map((s, i) => (
+        <div key={s.key} className="flex items-center">
+          <div className="flex flex-col items-center gap-1">
+            <motion.div animate={{ scale: i === idx ? 1.1 : 1 }}
+              className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow transition-all
+                ${i < idx  ? 'bg-green-500 text-white' :
+                  i === idx ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-200' :
+                               'bg-stone-100 text-stone-400'}`}>
+              {i < idx ? '✓' : s.icon}
+            </motion.div>
+            <span className={`text-xs font-bold hidden sm:block ${i === idx ? 'text-green-700' : i < idx ? 'text-green-500' : 'text-stone-400'}`}>
+              {s.label}
+            </span>
+          </div>
+          {i < 2 && (
+            <div className={`w-16 h-1 mx-2 rounded-full transition-all mt-[-14px] ${i < idx ? 'bg-green-400' : 'bg-stone-200'}`} />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/* ── Main Checkout ── */
 export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [step,       setStep]       = useState('address');   // 'address' | 'pay' | 'confirm'
-  const [saving,     setSaving]     = useState(false);
-  const [utrNumber,  setUtrNumber]  = useState('');
-  const [error,      setError]      = useState('');
-  const [orderId,    setOrderId]    = useState('');
-  const [isMobile,   setIsMobile]   = useState(false);
+  const [step, setStep]               = useState('address');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [deliveryOptions, setDeliveryOptions] = useState([]);
+  const [selectedDelivery, setSelectedDelivery] = useState(null);
+  const [processing, setProcessing]   = useState(false);
+  const [error, setError]             = useState('');
 
-  const shipping   = cartItems.length > 0 ? 49 : 0;
-  const total      = cartTotal + shipping;
-
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     name:    user?.name  || '',
     email:   user?.email || '',
-    phone:   '',
+    phone:   user?.phone || user?.mobile || '',
     address: '',
     city:    '',
     state:   '',
     pincode: '',
   });
 
-  /* Detect mobile for UPI intent vs QR */
+  /* Pre-fill saved address */
   useEffect(() => {
-    setIsMobile(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
-  }, []);
+    if (user?.addresses?.length > 0) {
+      const def = user.addresses.find(a => a.isDefault) || user.addresses[0];
+      if (def) {
+        const parts = (def.address || '').split(',');
+        setForm(f => ({
+          ...f,
+          address: parts[0]?.trim() || def.address || '',
+          city:    parts[1]?.trim() || '',
+          state:   parts[2]?.trim() || '',
+          pincode: def.pincode || '',
+        }));
+      }
+    }
+  }, [user]);
 
-  /* Generate a temp order ID for QR note */
+  /* Fetch delivery options when moving to delivery step */
   useEffect(() => {
-    if (step === 'pay') {
-      setOrderId('NK' + Date.now().toString().slice(-8));
+    if (step === 'delivery') {
+      getDeliveryOptions().then(data => {
+        setDeliveryOptions(data.options || []);
+        setSelectedDelivery(data.options?.[0] || null);
+      }).catch(() => {
+        setDeliveryOptions([
+          { id: 'Standard', label: 'Standard Delivery', description: '5-7 days', cost: 0, costLabel: 'FREE', icon: '📦' },
+          { id: 'One-Day',  label: 'One-Day Delivery',  description: 'Tomorrow', cost: 50, costLabel: '+₹50', icon: '⚡' },
+          { id: 'Same-Day', label: 'Same-Day Delivery', description: 'Today by 8PM', cost: 150, costLabel: '+₹150', icon: '🚀' },
+        ]);
+        setSelectedDelivery({ id: 'Standard', cost: 0 });
+      });
     }
   }, [step]);
 
-  const upiLink = buildUpiLink(total, orderId);
+  const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  const handleAddressSubmit = (e) => {
+  /* ── Step 1: Validate address ── */
+  const handleAddressNext = e => {
     e.preventDefault();
-    setStep('pay');
+    const errs = {};
+    if (!form.name.trim() || form.name.trim().length < 2) errs.name = 'Enter full name';
+    if (!/^[6-9]\d{9}$/.test(form.phone.replace(/\s/g, ''))) errs.phone = 'Valid 10-digit mobile required';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Valid email required';
+    if (!form.address.trim() || form.address.trim().length < 10) errs.address = 'Enter complete address';
+    if (!form.city.trim()) errs.city = 'City required';
+    if (!form.state.trim()) errs.state = 'State required';
+    if (!/^\d{6}$/.test(form.pincode.trim())) errs.pincode = 'Valid 6-digit pincode required';
+    setFieldErrors(errs);
+    if (Object.keys(errs).length === 0) {
+      setStep('delivery');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  /* ── Step 2: Select delivery ── */
+  const handleDeliveryNext = () => {
+    if (!selectedDelivery) return;
+    setStep('payment');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  /* Open Google Pay intent on mobile */
-  const openGooglePay = () => {
-    window.location.href = upiLink;
-  };
+  const shippingCost = selectedDelivery?.cost || 0;
+  const subtotal     = cartTotal;
+  const total        = subtotal + shippingCost;
 
-  /* Confirm payment and save order */
-  const handleConfirmPayment = async () => {
-    setSaving(true);
+  /* ── Step 3: Razorpay payment ── */
+  const handlePayNow = useCallback(async () => {
+    setProcessing(true);
     setError('');
     try {
-      const result = await saveUpiOrder({
-        orderData: {
-          items:       cartItems,
-          totalAmount: total,
-          address:     formData,
-          userId:      user?._id || null,
-        },
-        utrNumber: utrNumber.trim(),
+      const sdkLoaded = await loadRazorpay();
+      if (!sdkLoaded) throw new Error('Failed to load payment gateway. Check internet connection.');
+
+      /* Create Razorpay order on backend */
+      const orderData = await createRazorpayOrder({
+        amount:   total,
+        currency: 'INR',
+        notes:    { customerName: form.name, customerEmail: form.email },
       });
 
-      localStorage.setItem('lastOrder', JSON.stringify({
-        orderId:          result.orderId,
-        items:            cartItems,
-        total,
-        address:          formData,
-        paymentMethod:    'Google Pay / UPI',
-        utrNumber:        utrNumber.trim(),
-        estimatedDelivery:result.estimatedDelivery,
-      }));
+      /* Get key */
+      const { keyId } = await getRazorpayKey();
 
-      clearCart();
-      navigate('/order-confirmation', {
-        state: {
-          orderId:          result.orderId,
-          estimatedDelivery:result.estimatedDelivery,
-          paymentMethod:    'Google Pay / UPI',
-          utrNumber:        utrNumber.trim(),
+      /* Open Razorpay modal */
+      const options = {
+        key:         keyId,
+        amount:      orderData.amount,
+        currency:    orderData.currency,
+        name:        'NatureKart',
+        description: `Order of ${cartItems.length} item(s)`,
+        image:       'https://naturekart.in/logo.png',
+        order_id:    orderData.razorpayOrderId,
+        prefill: {
+          name:    form.name,
+          email:   form.email,
+          contact: form.phone,
         },
+        theme: { color: '#059669' },
+        handler: async function (response) {
+          try {
+            /* Verify payment on backend — creates order in DB */
+            const result = await verifyRazorpayPayment({
+              razorpay_order_id:   response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature:  response.razorpay_signature,
+              orderData: {
+                items:        cartItems,
+                address:      form,
+                deliveryType: selectedDelivery.id,
+                shippingCost,
+                subtotal,
+                totalAmount:  total,
+                userId:       user?.id || user?._id || null,
+              },
+            });
+
+            clearCart();
+            navigate('/order-confirmation', {
+              state: {
+                orderId:           result.orderId,
+                invoiceNumber:     result.invoiceNumber,
+                estimatedDelivery: result.estimatedDelivery,
+                paymentMethod:     result.paymentMethod,
+                totalAmount:       result.totalAmount,
+                deliveryType:      selectedDelivery.id,
+                items:             cartItems,
+                address:           form,
+              },
+            });
+          } catch (verifyErr) {
+            setError(verifyErr.response?.data?.message || 'Payment verification failed. Contact support.');
+            setProcessing(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setProcessing(false);
+            setError('Payment cancelled. Your cart is safe — try again when ready.');
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response) {
+        setError(`Payment failed: ${response.error.description}`);
+        setProcessing(false);
       });
+      rzp.open();
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to save order. Try again.');
-      setSaving(false);
+      setError(err.response?.data?.message || err.message || 'Payment failed. Please try again.');
+      setProcessing(false);
     }
-  };
+  }, [total, form, cartItems, selectedDelivery, shippingCost, subtotal, user, clearCart, navigate]);
 
   /* ── Empty cart guard ── */
   if (cartItems.length === 0) {
@@ -143,9 +267,10 @@ export default function CheckoutPage() {
       {/* Navbar */}
       <nav className="bg-white border-b border-stone-100 px-4 py-4 sticky top-0 z-50 shadow-sm">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <button onClick={() => step === 'address' ? navigate(-1) : setStep('address')}
+          <button onClick={() => step === 'address' ? navigate(-1) : setStep(step === 'payment' ? 'delivery' : 'address')}
             className="flex items-center gap-2 text-stone-600 hover:text-green-700 font-semibold transition-colors">
-            <span className="text-xl">←</span> {step === 'address' ? 'Back' : 'Edit Address'}
+            <span className="text-xl">←</span>
+            <span className="hidden sm:block">{step === 'address' ? 'Back' : step === 'delivery' ? 'Edit Address' : 'Change Delivery'}</span>
           </button>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
@@ -158,212 +283,209 @@ export default function CheckoutPage() {
       </nav>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+        <StepBar step={step} />
 
-        {/* Step indicator */}
-        <div className="flex items-center justify-center gap-3 mb-10">
-          {[
-            { key: 'address', label: 'Address', icon: '📍' },
-            { key: 'pay',     label: 'Pay',     icon: '💸' },
-          ].map(({ key, label, icon }, i) => (
-            <div key={key} className="flex items-center gap-2">
-              <motion.div animate={{ scale: step === key ? 1.1 : 1 }}
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
-                  step === key ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-200' :
-                  step === 'pay' && i === 0 ? 'bg-green-500 text-white' : 'bg-stone-100 text-stone-400'
-                }`}>
-                {step === 'pay' && i === 0 ? '✓' : icon}
+        <div className="grid lg:grid-cols-[1fr_340px] gap-6">
+
+          {/* ── Left: Steps ── */}
+          <AnimatePresence mode="wait">
+
+            {/* STEP 1: ADDRESS */}
+            {step === 'address' && (
+              <motion.div key="address" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+                <h2 className="text-2xl font-extrabold text-stone-800 mb-5">📍 Delivery Address</h2>
+                <form onSubmit={handleAddressNext} className="bg-white rounded-2xl border border-stone-100 p-6 shadow-sm space-y-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <Field label="Full Name" name="name" value={form.name} onChange={handleChange} required placeholder="Your full name" error={fieldErrors.name} />
+                    <Field label="Phone" name="phone" type="tel" value={form.phone} onChange={handleChange} required placeholder="10-digit mobile" error={fieldErrors.phone} />
+                  </div>
+                  <Field label="Email" name="email" type="email" value={form.email} onChange={handleChange} required placeholder="your@email.com" error={fieldErrors.email} />
+                  <Field label="Full Address" name="address" value={form.address} onChange={handleChange} required placeholder="House no, Street, Landmark, Area" textarea error={fieldErrors.address} />
+                  <div className="grid grid-cols-3 gap-3">
+                    <Field label="City"    name="city"    value={form.city}    onChange={handleChange} required placeholder="City"    error={fieldErrors.city} />
+                    <Field label="State"   name="state"   value={form.state}   onChange={handleChange} required placeholder="State"   error={fieldErrors.state} />
+                    <Field label="Pincode" name="pincode" value={form.pincode} onChange={handleChange} required placeholder="6-digit" error={fieldErrors.pincode} />
+                  </div>
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} type="submit"
+                    className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-extrabold text-base rounded-xl shadow-xl shadow-green-200">
+                    Continue to Delivery →
+                  </motion.button>
+                </form>
               </motion.div>
-              <span className={`hidden sm:block text-sm font-bold ${step === key ? 'text-green-700' : 'text-stone-400'}`}>{label}</span>
-              {i < 1 && <div className={`w-10 h-1 rounded-full transition-all mx-1 ${step === 'pay' ? 'bg-green-400' : 'bg-stone-200'}`} />}
-            </div>
-          ))}
-        </div>
+            )}
 
-        <AnimatePresence mode="wait">
-
-          {/* ══ STEP 1: ADDRESS ══════════════════════════════════════════ */}
-          {step === 'address' && (
-            <motion.div key="address" initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 30 }}
-              className="max-w-2xl mx-auto">
-              <h2 className="text-2xl font-extrabold text-stone-800 mb-6">📍 Delivery Address</h2>
-              <form onSubmit={handleAddressSubmit} className="bg-white rounded-2xl border border-stone-100 p-6 shadow-sm space-y-4">
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <Field label="Full Name" name="name"  value={formData.name}  onChange={handleChange} required placeholder="Your full name" />
-                  <Field label="Phone"     name="phone" type="tel" value={formData.phone} onChange={handleChange} required placeholder="10-digit mobile" />
+            {/* STEP 2: DELIVERY */}
+            {step === 'delivery' && (
+              <motion.div key="delivery" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+                <h2 className="text-2xl font-extrabold text-stone-800 mb-5">🚚 Choose Delivery</h2>
+                <div className="space-y-3">
+                  {deliveryOptions.map(opt => (
+                    <motion.button key={opt.id} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                      onClick={() => setSelectedDelivery(opt)}
+                      className={`w-full text-left p-5 rounded-2xl border-2 transition-all shadow-sm ${
+                        selectedDelivery?.id === opt.id
+                          ? 'border-green-500 bg-green-50 shadow-green-100'
+                          : 'border-stone-200 bg-white hover:border-stone-300'
+                      }`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <span className="text-3xl">{opt.icon}</span>
+                          <div>
+                            <p className="font-bold text-stone-800">{opt.label}</p>
+                            <p className="text-sm text-stone-500 mt-0.5">{opt.description}</p>
+                            {opt.eta && <p className="text-xs text-green-600 font-semibold mt-1">📅 {opt.eta}</p>}
+                            {opt.note && <p className="text-xs text-amber-600 mt-1">⚠️ {opt.note}</p>}
+                          </div>
+                        </div>
+                        <div className="text-right flex-shrink-0 ml-4">
+                          <span className={`font-extrabold text-lg ${opt.cost === 0 ? 'text-green-600' : 'text-stone-700'}`}>
+                            {opt.costLabel}
+                          </span>
+                          <div className={`w-5 h-5 rounded-full border-2 mt-2 ml-auto flex items-center justify-center ${
+                            selectedDelivery?.id === opt.id ? 'border-green-500 bg-green-500' : 'border-stone-300'
+                          }`}>
+                            {selectedDelivery?.id === opt.id && <span className="text-white text-xs">✓</span>}
+                          </div>
+                        </div>
+                      </div>
+                    </motion.button>
+                  ))}
                 </div>
-                <Field label="Email" name="email" type="email" value={formData.email} onChange={handleChange} required placeholder="your@email.com" />
-                <Field label="Full Address" name="address" value={formData.address} onChange={handleChange} required placeholder="House no, Street, Landmark, Area" textarea />
-                <div className="grid grid-cols-3 gap-3">
-                  <Field label="City"    name="city"    value={formData.city}    onChange={handleChange} required placeholder="City" />
-                  <Field label="State"   name="state"   value={formData.state}   onChange={handleChange} required placeholder="State" />
-                  <Field label="Pincode" name="pincode" value={formData.pincode} onChange={handleChange} required placeholder="6-digit" />
-                </div>
-
-                {/* Order total preview */}
-                <div className="bg-stone-50 rounded-xl p-4 flex justify-between items-center">
-                  <span className="text-stone-500 font-medium text-sm">{cartItems.length} item{cartItems.length > 1 ? 's' : ''} + ₹{shipping} shipping</span>
-                  <span className="font-extrabold text-green-700 text-lg">₹{total.toLocaleString()}</span>
-                </div>
-
-                <motion.button whileHover={{ scale: 1.02, boxShadow: '0 16px 32px rgba(16,185,129,0.3)' }} whileTap={{ scale: 0.97 }}
-                  type="submit"
-                  className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-extrabold text-base rounded-xl shadow-xl shadow-green-200">
-                  Continue to Pay →
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                  onClick={handleDeliveryNext} disabled={!selectedDelivery}
+                  className="w-full mt-5 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-extrabold text-base rounded-xl shadow-xl shadow-green-200 disabled:opacity-60">
+                  Continue to Payment →
                 </motion.button>
-              </form>
-            </motion.div>
-          )}
+              </motion.div>
+            )}
 
-          {/* ══ STEP 2: GOOGLE PAY ═══════════════════════════════════════ */}
-          {step === 'pay' && (
-            <motion.div key="pay" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
-              className="max-w-2xl mx-auto">
-
-              {/* Amount pill */}
-              <div className="text-center mb-6">
-                <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring' }}
-                  className="inline-flex items-center gap-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-2xl shadow-lg shadow-green-200 font-extrabold text-xl">
-                  <span>💰</span>
-                  <span>Pay ₹{total.toLocaleString()}</span>
-                </motion.div>
-              </div>
-
-              <div className="bg-white rounded-3xl border border-stone-100 shadow-xl overflow-hidden">
-
-                {/* Google Pay Header */}
-                <div className="bg-gradient-to-r from-[#1a73e8] to-[#4285f4] px-6 py-5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-white rounded-2xl shadow flex items-center justify-center">
-                      {/* Google Pay G logo */}
-                      <svg viewBox="0 0 24 24" className="w-8 h-8" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                      </svg>
+            {/* STEP 3: PAYMENT */}
+            {step === 'payment' && (
+              <motion.div key="payment" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+                <h2 className="text-2xl font-extrabold text-stone-800 mb-5">💳 Secure Payment</h2>
+                <div className="bg-white rounded-2xl border border-stone-100 p-6 shadow-sm">
+                  {/* Razorpay branding */}
+                  <div className="bg-gradient-to-r from-[#3395FF] to-[#0064E0] rounded-xl p-5 mb-6 text-white">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                        <span className="text-[#3395FF] font-black text-lg">R</span>
+                      </div>
+                      <div>
+                        <p className="font-black text-lg">Razorpay</p>
+                        <p className="text-blue-200 text-xs">India's most trusted payment gateway</p>
+                      </div>
+                      <div className="ml-auto bg-white/20 px-3 py-1 rounded-full">
+                        <span className="text-xs font-bold">🔒 256-bit SSL</span>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="text-white font-black text-xl">Google Pay</h2>
-                      <p className="text-blue-100 text-xs">Fast, secure UPI payment</p>
-                    </div>
-                    <div className="ml-auto bg-white/20 px-3 py-1 rounded-full">
-                      <span className="text-white text-xs font-bold">🔒 Secure</span>
+                    <div className="grid grid-cols-4 gap-2 mt-3">
+                      {['💳 Cards', '📱 UPI', '🏦 Netbanking', '👛 Wallets'].map(m => (
+                        <div key={m} className="bg-white/15 rounded-lg py-2 px-1 text-center text-xs font-semibold">{m}</div>
+                      ))}
                     </div>
                   </div>
-                </div>
 
-                <div className="p-6 space-y-6">
-
-                  {/* QR Code section */}
-                  <div className="text-center">
-                    <p className="text-sm font-bold text-stone-600 mb-4">
-                      {isMobile ? '👆 Tap the button below to pay with Google Pay' : '📱 Scan QR code with Google Pay or any UPI app'}
-                    </p>
-
-                    {!isMobile && (
-                      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-                        className="inline-block p-4 bg-white border-2 border-stone-100 rounded-2xl shadow-lg">
-                        <QRCode value={upiLink} size={180} fgColor="#1a73e8" />
-                        <p className="text-xs text-stone-400 mt-2">Scan with Google Pay / PhonePe / Any UPI</p>
-                      </motion.div>
+                  {/* Order summary in payment step */}
+                  <div className="bg-stone-50 rounded-xl p-4 mb-5 space-y-2">
+                    <p className="text-xs font-bold text-stone-400 uppercase tracking-wide mb-2">Paying for</p>
+                    {cartItems.map(item => (
+                      <div key={item._id || item.id} className="flex justify-between text-sm">
+                        <span className="text-stone-600 truncate mr-2">{item.name} × {item.quantity}</span>
+                        <span className="font-semibold flex-shrink-0">₹{(item.price * item.quantity).toLocaleString()}</span>
+                      </div>
+                    ))}
+                    {shippingCost > 0 && (
+                      <div className="flex justify-between text-sm border-t border-stone-200 pt-2 mt-2">
+                        <span className="text-stone-500">{selectedDelivery?.label}</span>
+                        <span className="text-stone-600">+₹{shippingCost}</span>
+                      </div>
                     )}
+                    <div className="flex justify-between font-extrabold text-stone-800 border-t border-stone-200 pt-2">
+                      <span>Total</span>
+                      <span className="text-green-700">₹{total.toLocaleString()}</span>
+                    </div>
                   </div>
 
-                  {/* UPI ID display */}
-                  <div className="bg-stone-50 rounded-xl p-4 text-center">
-                    <p className="text-xs text-stone-400 font-medium mb-1">Paying to UPI ID</p>
-                    <p className="font-extrabold text-stone-800 text-base tracking-wide">{MERCHANT_UPI}</p>
-                    <p className="text-xs text-stone-500 mt-1">{MERCHANT_NAME}</p>
-                  </div>
-
-                  {/* Mobile: Open Google Pay button */}
-                  {isMobile && (
-                    <motion.a href={upiLink}
-                      whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                      className="w-full flex items-center justify-center gap-3 py-4 bg-[#1a73e8] hover:bg-[#1558b0] text-white font-extrabold text-lg rounded-2xl shadow-lg shadow-blue-200 transition-all">
-                      <svg viewBox="0 0 24 24" className="w-6 h-6" fill="white">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                      </svg>
-                      Open Google Pay
-                    </motion.a>
-                  )}
-
-                  {/* Divider */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 h-px bg-stone-100" />
-                    <span className="text-xs text-stone-400 font-medium">After paying, confirm below</span>
-                    <div className="flex-1 h-px bg-stone-100" />
-                  </div>
-
-                  {/* UTR Input */}
-                  <div>
-                    <label className="block text-xs font-bold text-stone-500 mb-1 uppercase tracking-wide">
-                      Transaction / UTR Number <span className="text-stone-300">(optional)</span>
-                    </label>
-                    <input
-                      value={utrNumber}
-                      onChange={e => setUtrNumber(e.target.value)}
-                      placeholder="e.g. 123456789012 (12-digit UPI ref)"
-                      className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm bg-stone-50 focus:bg-white transition-all"
-                    />
-                    <p className="text-xs text-stone-400 mt-1">Find this in Google Pay → Transaction History</p>
-                  </div>
-
-                  {/* Error */}
                   <AnimatePresence>
                     {error && (
                       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                        className="bg-red-50 border border-red-200 text-red-600 rounded-xl p-3 text-sm font-medium">
+                        className="bg-red-50 border border-red-200 text-red-600 rounded-xl p-3 text-sm font-medium mb-4">
                         {error}
                       </motion.div>
                     )}
                   </AnimatePresence>
 
-                  {/* Confirm Payment Button */}
                   <motion.button
                     whileHover={{ scale: 1.02, boxShadow: '0 20px 40px rgba(16,185,129,0.3)' }}
                     whileTap={{ scale: 0.97 }}
-                    onClick={handleConfirmPayment}
-                    disabled={saving}
-                    className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-extrabold text-base rounded-2xl shadow-xl shadow-green-200 flex items-center justify-center gap-2 disabled:opacity-70">
-                    {saving ? (
+                    onClick={handlePayNow}
+                    disabled={processing}
+                    className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-extrabold text-lg rounded-2xl shadow-xl shadow-green-200 flex items-center justify-center gap-3 disabled:opacity-70">
+                    {processing ? (
                       <>
                         <motion.span animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
                           className="block w-5 h-5 border-2 border-white/30 border-t-white rounded-full" />
-                        Confirming…
+                        Opening Payment…
                       </>
                     ) : (
-                      <><span>✅</span> I Have Paid — Place Order</>
+                      <><span>🔒</span> Pay ₹{total.toLocaleString()} Securely</>
                     )}
                   </motion.button>
-
-                  <p className="text-center text-xs text-stone-400">
-                    🔒 Your order will be placed after payment confirmation
+                  <p className="text-center text-xs text-stone-400 mt-3">
+                    🛡️ Secured by Razorpay — Supports UPI, Cards, Net Banking & Wallets
                   </p>
                 </div>
-              </div>
-
-              {/* Order summary mini */}
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                className="mt-4 bg-white rounded-2xl border border-stone-100 p-4 shadow-sm">
-                <p className="text-xs font-bold text-stone-400 uppercase tracking-wide mb-3">Order Summary</p>
-                <div className="space-y-1.5 max-h-28 overflow-y-auto">
-                  {cartItems.map(item => (
-                    <div key={item._id || item.id} className="flex justify-between text-sm">
-                      <span className="text-stone-600 line-clamp-1">{item.name} × {item.quantity}</span>
-                      <span className="font-semibold ml-2">₹{(item.price * item.quantity).toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex justify-between font-extrabold text-stone-800 border-t border-stone-100 mt-3 pt-3">
-                  <span>Total</span>
-                  <span className="text-green-700">₹{total.toLocaleString()}</span>
-                </div>
               </motion.div>
-            </motion.div>
-          )}
+            )}
+          </AnimatePresence>
 
-        </AnimatePresence>
+          {/* ── Right: Order Summary ── */}
+          <div className="space-y-4">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm sticky top-24">
+              <p className="text-xs font-bold text-stone-400 uppercase tracking-wide mb-4">Order Summary</p>
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {cartItems.map(item => (
+                  <div key={item._id || item.id} className="flex gap-3 items-start">
+                    <div className="w-12 h-12 rounded-xl bg-stone-100 flex items-center justify-center text-xl flex-shrink-0 overflow-hidden">
+                      {item.image ? <img src={item.image} alt={item.name} className="w-full h-full object-cover rounded-xl" /> : '🌿'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-stone-700 line-clamp-2">{item.name}</p>
+                      <p className="text-xs text-stone-400 mt-0.5">Qty: {item.quantity}</p>
+                    </div>
+                    <p className="text-sm font-bold text-stone-800 flex-shrink-0">₹{(item.price * item.quantity).toLocaleString()}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-stone-100 mt-4 pt-4 space-y-2">
+                <div className="flex justify-between text-sm text-stone-500">
+                  <span>Subtotal ({cartItems.length} item{cartItems.length > 1 ? 's' : ''})</span>
+                  <span>₹{subtotal.toLocaleString()}</span>
+                </div>
+                {step !== 'address' && (
+                  <div className="flex justify-between text-sm text-stone-500">
+                    <span>Shipping ({selectedDelivery?.id})</span>
+                    <span className={shippingCost === 0 ? 'text-green-600 font-semibold' : ''}>{shippingCost === 0 ? 'FREE' : `₹${shippingCost}`}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-extrabold text-stone-800 border-t border-stone-100 pt-2">
+                  <span>Total</span>
+                  <span className="text-green-700 text-lg">₹{total.toLocaleString()}</span>
+                </div>
+              </div>
+              {/* Delivery address preview */}
+              {step !== 'address' && form.name && (
+                <div className="mt-4 p-3 bg-green-50 rounded-xl border border-green-100">
+                  <p className="text-xs font-bold text-green-700 mb-1">📍 Delivering to</p>
+                  <p className="text-xs text-stone-600">{form.name}</p>
+                  <p className="text-xs text-stone-500">{form.address}, {form.city}, {form.state} - {form.pincode}</p>
+                  <p className="text-xs text-stone-500">{form.phone}</p>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -192,8 +192,8 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Incorrect email or password' });
     }
 
-    /* Block unverified local accounts */
-    if (!user.isVerified && user.authProvider === 'local') {
+    /* Block unverified local accounts (bypass for admin role/email) */
+    if (!user.isVerified && user.authProvider === 'local' && user.role !== 'admin' && user.email !== 'admin@naturekart.com') {
       return res.status(403).json({
         message:              'Please verify your email first.',
         requiresVerification: true,

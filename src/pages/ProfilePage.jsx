@@ -479,7 +479,7 @@ export default function ProfilePage() {
     const deliveryDate = new Date(order.updatedAt);
     const diffTime = Math.abs(new Date() - deliveryDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 7;
+    return diffDays <= 30;
   };
 
   const getProductReturn = (orderId, productId) => {
@@ -623,7 +623,13 @@ export default function ProfilePage() {
                         <span className="text-xs text-stone-400 font-bold uppercase tracking-wider">Order ID</span>
                         <p className="font-black text-stone-800 text-sm">#{order.orderId}</p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
+                        <Link 
+                          to={`/order-tracking/${order.orderId}`} 
+                          className="px-3.5 py-1.5 bg-stone-100 text-stone-600 text-xs font-extrabold rounded-xl hover:bg-stone-200 transition-colors flex items-center gap-1.5"
+                        >
+                          <span>📍</span> Track Order
+                        </Link>
                         <span className={`px-3 py-1 rounded-xl text-xs font-extrabold ${STATUS_STYLE[order.status.toLowerCase().replace(/\s+/g, '')] || 'bg-stone-100 text-stone-600'}`}>
                           {order.status}
                         </span>
@@ -676,7 +682,7 @@ export default function ProfilePage() {
                                   </>
                                 ) : (
                                   <span className="text-xs text-stone-400 font-semibold">
-                                    Return window closed (7 days exceeded)
+                                    Return window closed (30 days exceeded)
                                   </span>
                                 )
                               ) : (
