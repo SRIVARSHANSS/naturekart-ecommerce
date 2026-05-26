@@ -262,26 +262,26 @@ const AISuggestionStrip = ({ onViewProduct }) => {
 
   return (
     <FadeUp className="mb-10">
-      <div className="bg-surface border border-gold/15 rounded-sm p-6 relative overflow-hidden shadow-2xl">
+      <div className="ai-recs-dark-strip bg-[#1B3626] border border-white/10 rounded-sm p-6 relative overflow-hidden shadow-2xl">
         <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.03, 0.07, 0.03] }}
           transition={{ duration: 6, repeat: Infinity }}
-          className="absolute top-0 right-0 w-64 h-64 bg-gold rounded-full blur-3xl translate-x-1/3 -translate-y-1/3 pointer-events-none" />
+          className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3 pointer-events-none" />
 
         <div className="flex items-center justify-between mb-5 relative z-10">
           <div className="flex items-center gap-3">
             <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 3, repeat: Infinity }}
-              className="w-10 h-10 bg-gold/10 border border-gold/20 rounded-sm flex items-center justify-center text-lg">
+              className="spark-icon w-10 h-10 bg-white/5 border border-white/10 rounded-sm flex items-center justify-center text-lg">
               ✨
             </motion.div>
             <div>
-              <div className="text-gold font-serif text-base tracking-wider">AI Picks For You</div>
-              <div className="text-gold-dim/75 font-accent italic text-xs">Recommended based on your botanical wellness profile</div>
+              <div className="strip-title text-white font-serif text-base tracking-wider">AI Picks For You</div>
+              <div className="strip-subtitle text-white/70 font-accent italic text-xs">Recommended based on your botanical wellness profile</div>
             </div>
           </div>
           <div className="flex gap-2">
             {[-1, 1].map((dir) => (
               <motion.button key={dir} onClick={() => scroll(dir)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                className="w-8 h-8 bg-surface-light hover:bg-surface-light/80 border border-gold/10 hover:border-gold/30 rounded-sm flex items-center justify-center text-gold text-xs transition-all">
+                className="arrow-btn w-8 h-8 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 rounded-sm flex items-center justify-center text-white text-xs transition-all">
                 {dir === -1 ? "←" : "→"}
               </motion.button>
             ))}
@@ -295,11 +295,11 @@ const AISuggestionStrip = ({ onViewProduct }) => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.06 }}
-              whileHover={{ y: -4, borderColor: "rgba(201, 168, 76, 0.4)" }}
+              whileHover={{ y: -4, borderColor: "rgba(255, 255, 255, 0.35)" }}
               onClick={() => onViewProduct(product)}
-              className="flex-shrink-0 w-48 bg-surface-light border border-gold/10 rounded-sm overflow-hidden cursor-pointer group"
+              className="ai-rec-card flex-shrink-0 w-48 bg-[#13281C] border border-white/10 rounded-sm overflow-hidden cursor-pointer group"
             >
-              <div className="relative overflow-hidden h-28 bg-bg border-b border-gold/10">
+              <div className="relative overflow-hidden h-28 bg-bg border-b border-white/10">
                 <motion.img whileHover={{ scale: 1.08 }} transition={{ duration: 0.35 }}
                   src={product.image} alt={product.name}
                   className="w-full h-full object-cover"
@@ -311,8 +311,8 @@ const AISuggestionStrip = ({ onViewProduct }) => {
                 )}
               </div>
               <div className="p-3">
-                <p className="text-white text-xs font-serif leading-tight line-clamp-2 mb-1 group-hover:text-gold transition-colors">{product.name}</p>
-                <p className="text-gold text-xs font-sans font-bold">₹{product.price}</p>
+                <p className="product-name text-white text-xs font-serif leading-tight line-clamp-2 mb-1 group-hover:text-gold-light transition-colors">{product.name}</p>
+                <p className="product-price text-white text-xs font-sans font-bold">₹{product.price}</p>
               </div>
             </motion.div>
           ))}

@@ -305,3 +305,154 @@ input::placeholder, textarea::placeholder {
 .dark-section .bg-surface .force-text-white {
   color: #FFFFFF !important;
 }
+
+/* ── Profile Dark Container Overrides ── */
+.profile-dark-container,
+.profile-dark-container * {
+  color: #FFFFFF !important;
+}
+
+.profile-dark-container .text-gold,
+.profile-dark-container .text-gold-dim {
+  color: #FFFFFF !important;
+}
+
+/* Permit translucent colors */
+.profile-dark-container .text-white\/20,
+.profile-dark-container .text-\[\#F5F0E8\]\/20 {
+  color: rgba(255, 255, 255, 0.2) !important;
+}
+.profile-dark-container .text-white\/30,
+.profile-dark-container .text-\[\#F5F0E8\]\/30 {
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+.profile-dark-container .text-white\/40,
+.profile-dark-container .text-\[\#F5F0E8\]\/40 {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+.profile-dark-container .text-white\/50,
+.profile-dark-container .text-\[\#F5F0E8\]\/50 {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+.profile-dark-container .text-white\/60,
+.profile-dark-container .text-\[\#F5F0E8\]\/60 {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+.profile-dark-container .text-white\/75,
+.profile-dark-container .text-\[\#F5F0E8\]\/75,
+.profile-dark-container .text-white\/70,
+.profile-dark-container .text-\[\#F5F0E8\]\/70 {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+.profile-dark-container .text-white\/80,
+.profile-dark-container .text-\[\#F5F0E8\]\/80 {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Borders within dark profile container */
+.profile-dark-container .border,
+.profile-dark-container .border-white\/10,
+.profile-dark-container .border-gold\/8,
+.profile-dark-container .border-gold\/10,
+.profile-dark-container .border-gold\/15,
+.profile-dark-container .border-gold\/20,
+.profile-dark-container .border-gold\/25,
+.profile-dark-container .border-gold\/30,
+.profile-dark-container .border-gold\/40 {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Status Badge styling within dark profile */
+.profile-dark-container .status-badge {
+  color: inherit !important;
+}
+.profile-dark-container .status-badge-delivered {
+  color: #F59E0B !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+  background-color: rgba(245, 158, 11, 0.05) !important;
+}
+.profile-dark-container .status-badge-shipped {
+  color: #FB923C !important;
+  border-color: rgba(251, 146, 60, 0.3) !important;
+  background-color: rgba(251, 146, 60, 0.05) !important;
+}
+.profile-dark-container .status-badge-placed {
+  color: #60A5FA !important;
+  border-color: rgba(96, 165, 250, 0.3) !important;
+  background-color: rgba(96, 165, 250, 0.05) !important;
+}
+.profile-dark-container .status-badge-outfordelivery {
+  color: #34D399 !important;
+  border-color: rgba(52, 211, 153, 0.3) !important;
+  background-color: rgba(52, 211, 153, 0.05) !important;
+}
+.profile-dark-container .status-badge-packed {
+  color: #C084FC !important;
+  border-color: rgba(192, 132, 252, 0.3) !important;
+  background-color: rgba(192, 132, 252, 0.05) !important;
+}
+.profile-dark-container .status-badge-cancelled {
+  color: #F87171 !important;
+  border-color: rgba(248, 113, 113, 0.3) !important;
+  background-color: rgba(248, 113, 113, 0.05) !important;
+}
+
+/* ── AI Picks For You Dark Strip Overrides ── */
+.ai-recs-dark-strip {
+  background-color: #1B3626 !important;
+  color: #FFFFFF !important;
+}
+
+.ai-recs-dark-strip .text-gold,
+.ai-recs-dark-strip .text-gold-dim {
+  color: #FFFFFF !important;
+}
+
+.ai-recs-dark-strip h2,
+.ai-recs-dark-strip h3,
+.ai-recs-dark-strip p,
+.ai-recs-dark-strip span,
+.ai-recs-dark-strip div:not(.bg-surface-light *) {
+  color: #FFFFFF !important;
+}
+
+/* Style the title and sub-headline in white */
+.ai-recs-dark-strip .strip-title {
+  color: #FFFFFF !important;
+}
+
+.ai-recs-dark-strip .strip-subtitle {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Style arrows and icons */
+.ai-recs-dark-strip .arrow-btn {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #FFFFFF !important;
+}
+.ai-recs-dark-strip .arrow-btn:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+.ai-recs-dark-strip .spark-icon {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Style product cards inside the dark strip */
+.ai-recs-dark-strip .ai-rec-card {
+  background-color: #13281C !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+.ai-recs-dark-strip .ai-rec-card:hover {
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+.ai-recs-dark-strip .ai-rec-card .product-name {
+  color: #FFFFFF !important;
+}
+.ai-recs-dark-strip .ai-rec-card .product-price {
+  color: #FFFFFF !important;
+}
+
+

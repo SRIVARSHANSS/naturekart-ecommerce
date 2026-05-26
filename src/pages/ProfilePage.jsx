@@ -116,16 +116,16 @@ const RETURN_STATUS_STYLE = {
 const SettingsToggle = ({ label, sub, defaultOn }) => {
   const [on, setOn] = useState(defaultOn);
   return (
-    <div className="flex items-center justify-between py-4 border-b border-gold/8 last:border-0">
+    <div className="flex items-center justify-between py-4 border-b border-white/10 last:border-0">
       <div>
-        <p className="text-sm text-[#F5F0E8]/70 font-sans">{label}</p>
-        <p className="text-xs text-[#F5F0E8]/30 mt-0.5">{sub}</p>
+        <p className="text-sm text-white/80 font-sans">{label}</p>
+        <p className="text-xs text-white/40 mt-0.5">{sub}</p>
       </div>
       <div onClick={() => setOn(v => !v)}
         className={`w-11 h-6 relative cursor-pointer border transition-all duration-300
-          ${on ? 'border-gold/50 bg-gold/10' : 'border-gold/10 bg-transparent'}`}>
+          ${on ? 'border-white/50 bg-white/10' : 'border-white/10 bg-transparent'}`}>
         <motion.div animate={{ x: on ? 22 : 2 }} transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-          className={`absolute top-1 w-4 h-4 transition-colors ${on ? 'bg-gold' : 'bg-gold/20'}`} />
+          className={`absolute top-1 w-4 h-4 transition-colors ${on ? 'bg-white' : 'bg-white/20'}`} />
       </div>
     </div>
   );
@@ -195,15 +195,15 @@ const ReturnTimeline = ({ currentStatus, remarks, pickupDate }) => {
   );
 
   return (
-    <div className="mt-4 pt-4 border-t border-gold/8">
-      <p className="text-[10px] tracking-[0.2em] uppercase text-gold/40 mb-4">Refund Timeline</p>
+    <div className="mt-4 pt-4 border-t border-white/10">
+      <p className="text-[10px] tracking-[0.2em] uppercase text-white/40 mb-4">Refund Timeline</p>
       <div className="grid grid-cols-5 gap-1 relative">
-        <div className="absolute top-[16px] left-[10%] right-[10%] h-px bg-gold/10 z-0">
+        <div className="absolute top-[16px] left-[10%] right-[10%] h-px bg-white/10 z-0">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${currentIndex >= 0 ? (currentIndex / 4) * 100 : 0}%` }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="h-full bg-gold/40"
+            className="h-full bg-white/40"
           />
         </div>
         {steps.map((step, idx) => {
@@ -212,15 +212,15 @@ const ReturnTimeline = ({ currentStatus, remarks, pickupDate }) => {
           return (
             <div key={step} className="flex flex-col items-center z-10 text-center">
               <div className={`w-8 h-8 border flex items-center justify-center text-xs font-sans transition-all
-                ${completed ? 'border-gold bg-gold text-bg' : 'border-gold/10 bg-transparent text-[#F5F0E8]/20'}`}>
+                ${completed ? 'border-white bg-white text-[#1B3626]' : 'border-white/10 bg-transparent text-white/20'}`}>
                 {completed && !active ? '✓' : idx + 1}
               </div>
               <span className={`text-[9px] mt-2 leading-tight block tracking-wide
-                ${completed ? 'text-gold/70' : 'text-[#F5F0E8]/20'}`}>
+                ${completed ? 'text-white/80' : 'text-white/20'}`}>
                 {step.split(' ')[0]}
               </span>
               {active && step === 'Pickup Scheduled' && pickupDate && (
-                <span className="text-[8px] text-gold/60 mt-0.5 block">
+                <span className="text-[8px] text-white/60 mt-0.5 block">
                   {new Date(pickupDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                 </span>
               )}
@@ -476,318 +476,324 @@ export default function ProfilePage() {
       </AnimatePresence>
 
       <div className="pt-28 pb-20 max-w-5xl mx-auto px-4 sm:px-6">
+        <div className="profile-dark-container bg-[#1B3626] border border-white/10 p-8 sm:p-12 md:p-14 relative overflow-hidden shadow-2xl">
+          {/* Botanical corners */}
+          <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-white/20 z-10" />
+          <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-white/20 z-10" />
+          <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-white/20 z-10" />
+          <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-white/20 z-10" />
 
-        {/* Hero banner */}
-        <FadeUp className="mb-8">
-          <div className="bg-surface border border-gold/15 p-6 sm:p-8 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-6 h-6 border-t border-l border-gold/40" />
-            <div className="absolute top-0 right-0 w-6 h-6 border-t border-r border-gold/40" />
-            <div className="absolute bottom-0 left-0 w-6 h-6 border-b border-l border-gold/40" />
-            <div className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-gold/40" />
-            {/* Grid texture */}
-            <div className="absolute inset-0 opacity-[0.02]"
-              style={{ backgroundImage: 'linear-gradient(#C9A84C 1px,transparent 1px),linear-gradient(90deg,#C9A84C 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
+          <div className="relative z-10">
+            {/* Hero banner */}
+            <FadeUp className="mb-8">
+              <div className="bg-[#13281C] border border-white/10 p-8 sm:p-10 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-6 h-6 border-t border-l border-white/20" />
+                <div className="absolute top-0 right-0 w-6 h-6 border-t border-r border-white/20" />
+                <div className="absolute bottom-0 left-0 w-6 h-6 border-b border-l border-white/20" />
+                <div className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-white/20" />
 
-            <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-6">
-              {/* Avatar */}
-              <div className="w-18 h-18 w-[72px] h-[72px] border border-gold/40 bg-gold/5 flex items-center justify-center flex-shrink-0">
-                <span className="font-serif text-3xl text-gold">{profile.name[0]?.toUpperCase()}</span>
-              </div>
-              <div className="flex-1">
-                <p className="text-[10px] tracking-[0.3em] uppercase text-gold/40 mb-1 italic">— Member Profile</p>
-                <h1 className="font-serif text-2xl sm:text-3xl text-[#F5F0E8]">{profile.name}</h1>
-                <p className="text-[#F5F0E8]/40 text-sm mt-0.5">{profile.email}</p>
-                <div className="flex flex-wrap gap-3 mt-4">
-                  {[{ v: orders.length, l: 'Orders' }, { v: wishlist.length, l: 'Wishlist' }, { v: cartCount, l: 'In Cart' }].map(({ v, l }) => (
-                    <div key={l} className="border border-gold/15 px-3 py-1.5">
-                      <span className="text-gold font-serif text-sm">{v} </span>
-                      <span className="text-[#F5F0E8]/30 text-xs tracking-wider">{l}</span>
+                <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                  {/* Avatar */}
+                  <div className="w-[90px] h-[90px] border border-white/20 bg-white/5 flex items-center justify-center flex-shrink-0">
+                    <span className="font-serif text-4xl text-white">{profile.name[0]?.toUpperCase()}</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs tracking-[0.3em] uppercase text-white/40 mb-1 italic">— Member Profile</p>
+                    <h1 className="font-serif text-3xl sm:text-4xl text-white">{profile.name}</h1>
+                    <p className="text-white/55 text-base mt-0.5">{profile.email}</p>
+                    <div className="flex flex-wrap gap-3 mt-4">
+                      {[{ v: orders.length, l: 'Orders' }, { v: wishlist.length, l: 'Wishlist' }, { v: cartCount, l: 'In Cart' }].map(({ v, l }) => (
+                        <div key={l} className="border border-white/10 bg-[#13281C] px-5 py-2.5">
+                          <span className="text-white font-serif text-base">{v} </span>
+                          <span className="text-white/40 text-sm tracking-wider">{l}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                onClick={() => setModal({
-                  title: 'Edit Profile', type: 'profile',
-                  fields: [{ key: 'name', label: 'Full Name' }, { key: 'email', label: 'Email', type: 'email' }, { key: 'phone', label: 'Phone', type: 'tel' }],
-                  init: profile,
-                })}
-                className="px-5 py-2.5 border border-gold/25 hover:border-gold/50 text-[#F5F0E8]/60 hover:text-gold text-xs tracking-[0.15em] uppercase transition-all flex-shrink-0">
-                Edit Profile
-              </motion.button>
-            </div>
-          </div>
-        </FadeUp>
-
-        {/* Success toast */}
-        <AnimatePresence>
-          {saved && (
-            <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              className="mb-5 p-4 border border-gold/25 bg-gold/5 text-center text-gold/70 text-xs tracking-[0.2em] uppercase">
-              ✦ Action completed successfully
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Tabs */}
-        <FadeUp delay={0.1} className="flex gap-0 overflow-x-auto mb-8 border-b border-gold/10">
-          {TABS.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)}
-              className={`relative px-5 py-3.5 text-xs tracking-[0.15em] uppercase whitespace-nowrap flex-shrink-0 transition-all duration-200
-                ${tab === t.key
-                  ? 'text-gold border-b-2 border-gold -mb-px'
-                  : 'text-[#F5F0E8]/35 hover:text-[#F5F0E8]/70'}`}>
-              {t.label}
-            </button>
-          ))}
-        </FadeUp>
-
-        {/* Tab content */}
-        <AnimatePresence mode="wait">
-
-          {/* Profile tab */}
-          {tab === 'profile' && (
-            <motion.div key="profile" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
-              <div className="grid sm:grid-cols-3 gap-4 mb-6">
-                {[{ l: 'Full Name', v: profile.name }, { l: 'Email', v: profile.email }, { l: 'Phone', v: profile.phone }].map(({ l, v }) => (
-                  <motion.div key={l} whileHover={{ y: -3, borderColor: 'rgba(201,168,76,0.3)' }}
-                    className="border border-gold/10 bg-surface p-5 transition-all duration-200 relative">
-                    <div className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-gold/20" />
-                    <p className="text-[10px] tracking-[0.2em] uppercase text-gold/40 mb-2">{l}</p>
-                    <p className="text-sm text-[#F5F0E8]/80 font-sans">{v}</p>
-                  </motion.div>
-                ))}
-              </div>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {[
-                  { l: 'My Orders',  action: () => setTab('orders')   },
-                  { l: 'Returns',    action: () => setTab('returns')  },
-                  { l: 'Wishlist',   action: () => navigate('/wishlist') },
-                  { l: 'Logout',     action: handleLogout, danger: true },
-                ].map(({ l, action, danger }) => (
-                  <motion.button key={l} onClick={action}
-                    whileHover={{ y: -4, borderColor: danger ? 'rgba(239,68,68,0.3)' : 'rgba(201,168,76,0.35)' }}
-                    whileTap={{ scale: 0.97 }}
-                    className={`border p-5 flex flex-col items-center gap-3 text-center transition-all duration-200
-                      ${danger ? 'border-red-500/15 hover:bg-red-500/5' : 'border-gold/10 bg-surface hover:bg-gold/3'}`}>
-                    <span className={`text-xs tracking-[0.15em] uppercase ${danger ? 'text-red-400/70' : 'text-[#F5F0E8]/50'}`}>{l}</span>
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Orders tab */}
-          {tab === 'orders' && (
-            <motion.div key="orders" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }} className="space-y-5">
-              {loadingOrders ? (
-                <div className="flex justify-center py-14">
-                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
-                    className="w-10 h-10 border border-gold/10 border-t-gold/60 rounded-full" />
-                </div>
-              ) : orders.length === 0 ? (
-                <div className="text-center py-16 border border-gold/10 bg-surface">
-                  <p className="text-gold/30 text-3xl mb-3">◎</p>
-                  <p className="text-[#F5F0E8]/30 text-sm">No orders found. Start your botanical journey!</p>
-                  <motion.button whileHover={{ scale: 1.02 }} onClick={() => navigate('/shop')}
-                    className="mt-6 px-8 py-3 bg-gold text-bg font-bold text-xs tracking-[0.15em] uppercase shimmer-btn-glow">
-                    Explore Shop
+                  </div>
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                    onClick={() => setModal({
+                      title: 'Edit Profile', type: 'profile',
+                      fields: [{ key: 'name', label: 'Full Name' }, { key: 'email', label: 'Email', type: 'email' }, { key: 'phone', label: 'Phone', type: 'tel' }],
+                      init: profile,
+                    })}
+                    className="px-7 py-3.5 border border-white/20 hover:border-white/50 text-white/80 hover:text-white text-sm tracking-[0.15em] uppercase transition-all flex-shrink-0">
+                    Edit Profile
                   </motion.button>
                 </div>
-              ) : (
-                orders.map((order, i) => (
-                  <motion.div key={order.orderId} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                    className="border border-gold/10 bg-surface p-6 relative">
-                    <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-gold/20" />
+              </div>
+            </FadeUp>
 
-                    {/* Order header */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-gold/8 pb-4 mb-4 gap-3">
-                      <div>
-                        <p className="text-[10px] tracking-[0.18em] uppercase text-gold/40 mb-1">Order Reference</p>
-                        <p className="text-sm text-[#F5F0E8]/80 font-sans">#{order.orderId}</p>
-                      </div>
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <Link to={`/order-tracking/${order.orderId}`}
-                          className="px-3 py-1.5 border border-gold/20 text-gold/60 hover:text-gold hover:border-gold/50 text-[10px] tracking-[0.15em] uppercase transition-all">
-                          Track →
-                        </Link>
-                        <span className={`px-3 py-1 border text-[10px] tracking-wider uppercase font-sans
-                          ${STATUS_STYLE[order.status.toLowerCase().replace(/\s+/g, '')] || 'border-gold/10 text-[#F5F0E8]/40'}`}>
-                          {order.status}
-                        </span>
-                        <span className="font-serif text-base text-gold">₹{order.totalAmount}</span>
-                      </div>
+            {/* Success toast */}
+            <AnimatePresence>
+              {saved && (
+                <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                  className="mb-5 p-5 border border-white/20 bg-white/5 text-center text-white/80 text-sm tracking-[0.2em] uppercase">
+                  ✦ Action completed successfully
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Tabs */}
+            <FadeUp delay={0.1} className="flex gap-0 overflow-x-auto mb-8 border-b border-white/10">
+              {TABS.map(t => (
+                <button key={t.key} onClick={() => setTab(t.key)}
+                  className={`relative px-8 py-4.5 text-base tracking-[0.15em] uppercase whitespace-nowrap flex-shrink-0 transition-all duration-200
+                    ${tab === t.key
+                      ? 'text-white border-b-2 border-white -mb-px font-semibold'
+                      : 'text-white/40 hover:text-white/80'}`}>
+                  {t.label}
+                </button>
+              ))}
+            </FadeUp>
+
+            {/* Tab content */}
+            <AnimatePresence mode="wait">
+
+              {/* Profile tab */}
+              {tab === 'profile' && (
+                <motion.div key="profile" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
+                  <div className="grid sm:grid-cols-3 gap-4 mb-6">
+                    {[{ l: 'Full Name', v: profile.name }, { l: 'Email', v: profile.email }, { l: 'Phone', v: profile.phone }].map(({ l, v }) => (
+                      <motion.div key={l} whileHover={{ y: -3, borderColor: 'rgba(255,255,255,0.2)' }}
+                        className="border border-white/10 bg-[#13281C] p-7 transition-all duration-200 relative">
+                        <div className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-white/20" />
+                        <p className="text-xs tracking-[0.2em] uppercase text-white/40 mb-2">{l}</p>
+                        <p className="text-base text-white/80 font-sans">{v}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {[
+                      { l: 'My Orders',  action: () => setTab('orders')   },
+                      { l: 'Returns',    action: () => setTab('returns')  },
+                      { l: 'Wishlist',   action: () => navigate('/wishlist') },
+                      { l: 'Logout',     action: handleLogout, danger: true },
+                    ].map(({ l, action, danger }) => (
+                      <motion.button key={l} onClick={action}
+                        whileHover={{ y: -4, borderColor: danger ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.25)' }}
+                        whileTap={{ scale: 0.97 }}
+                        className={`border p-7 flex flex-col items-center gap-3 text-center transition-all duration-200
+                          ${danger ? 'border-red-500/20 bg-red-500/5 hover:bg-red-500/10' : 'border-white/10 bg-[#13281C] hover:bg-white/5'}`}>
+                        <span className={`text-sm tracking-[0.15em] uppercase ${danger ? 'text-white font-semibold' : 'text-white/60'}`}>{l}</span>
+                      </motion.button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Orders tab */}
+              {tab === 'orders' && (
+                <motion.div key="orders" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }} className="space-y-5">
+                  {loadingOrders ? (
+                    <div className="flex justify-center py-14">
+                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+                        className="w-10 h-10 border border-white/10 border-t-white/60 rounded-full" />
                     </div>
+                  ) : orders.length === 0 ? (
+                    <div className="text-center py-16 border border-white/10 bg-[#13281C]">
+                      <p className="text-white/20 text-3xl mb-3">◎</p>
+                      <p className="text-white/40 text-base">No orders found. Start your botanical journey!</p>
+                      <motion.button whileHover={{ scale: 1.02 }} onClick={() => navigate('/shop')}
+                        className="mt-6 px-8 py-3 bg-white text-[#1B3626] font-bold text-sm tracking-[0.15em] uppercase shimmer-btn-glow">
+                        Explore Shop
+                      </motion.button>
+                    </div>
+                  ) : (
+                    orders.map((order, i) => (
+                      <motion.div key={order.orderId} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
+                        className="border border-white/10 bg-[#13281C] p-8 relative">
+                        <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-white/20" />
 
-                    {/* Order items */}
-                    <div className="space-y-4">
-                      {order.items.map(item => {
-                        const existingReturn = getProductReturn(order.orderId, item.productId);
-                        const eligible = isReturnEligible(order);
-                        const imgSrc = getProductImage(item);
-                        return (
-                          <div key={item.productId} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 border border-gold/10 bg-surface-light flex-shrink-0 overflow-hidden">
-                                {imgSrc
-                                  ? <img src={imgSrc} alt={item.name} className="w-full h-full object-cover"
-                                      onError={e => { e.target.style.display = 'none'; }} />
-                                  : <div className="w-full h-full flex items-center justify-center text-gold/15 text-xs">✦</div>
-                                }
-                              </div>
-                              <div>
-                                <p className="text-sm text-[#F5F0E8]/75 font-sans line-clamp-1">{item.name}</p>
-                                <p className="text-xs text-[#F5F0E8]/30 mt-0.5">₹{item.price} · Qty: {item.quantity}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              {existingReturn ? (
-                                <span className="px-3 py-1 border border-gold/20 text-gold/60 text-[10px] tracking-wider uppercase">
-                                  Return: {existingReturn.status}
-                                </span>
-                              ) : order.status === 'Delivered' ? (
-                                eligible ? (
-                                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                                    onClick={() => setReturnRequestModal({ orderId: order.orderId, item })}
-                                    className="px-3.5 py-1.5 border border-gold/25 hover:border-gold/50 text-gold/60 hover:text-gold text-[10px] tracking-wider uppercase transition-all">
-                                    Return Item
-                                  </motion.button>
-                                ) : (
-                                  <span className="text-[10px] text-[#F5F0E8]/25 tracking-wider">Return window closed</span>
-                                )
-                              ) : (
-                                <span className="text-[10px] text-[#F5F0E8]/25 tracking-wider">Return post-delivery</span>
-                              )}
-                            </div>
+                        {/* Order header */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-white/10 pb-4 mb-4 gap-3">
+                          <div>
+                            <p className="text-xs tracking-[0.18em] uppercase text-white/40 mb-1">Order Reference</p>
+                            <p className="text-base text-white/80 font-sans">#{order.orderId}</p>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                ))
-              )}
-            </motion.div>
-          )}
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <Link to={`/order-tracking/${order.orderId}`}
+                              className="px-5 py-2.5 border border-white/20 text-white/60 hover:text-white hover:border-white/50 text-xs tracking-[0.15em] uppercase transition-all">
+                              Track →
+                            </Link>
+                            <span className={`status-badge px-5 py-2 border text-xs tracking-wider uppercase font-sans status-badge-${order.status.toLowerCase().replace(/\s+/g, '')}
+                              ${STATUS_STYLE[order.status.toLowerCase().replace(/\s+/g, '')] || 'border-white/10 text-white/40'}`}>
+                              {order.status}
+                            </span>
+                            <span className="font-serif text-lg text-white">₹{order.totalAmount}</span>
+                          </div>
+                        </div>
 
-          {/* Returns tab */}
-          {tab === 'returns' && (
-            <motion.div key="returns" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }} className="space-y-5">
-              {loadingReturns ? (
-                <div className="flex justify-center py-14">
-                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
-                    className="w-10 h-10 border border-gold/10 border-t-gold/60 rounded-full" />
-                </div>
-              ) : returns.length === 0 ? (
-                <div className="text-center py-16 border border-gold/10 bg-surface">
-                  <p className="text-gold/30 text-3xl mb-3">◎</p>
-                  <p className="text-[#F5F0E8]/30 text-sm">No active returns or refund requests.</p>
-                </div>
-              ) : (
-                returns.map((ret, i) => (
-                  <motion.div key={ret._id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
-                    className="border border-gold/10 bg-surface p-6 space-y-4 relative">
-                    <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-gold/20" />
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gold/8 pb-3">
-                      <div>
-                        <p className="text-[10px] tracking-[0.18em] uppercase text-gold/40 mb-1">Return / Order</p>
-                        <p className="text-sm text-[#F5F0E8]/70">#{ret.orderId}</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`px-3 py-1 border text-[10px] tracking-wider uppercase ${RETURN_STATUS_STYLE[ret.status] || 'border-gold/10 text-[#F5F0E8]/30'}`}>
-                          {ret.status}
-                        </span>
-                        <span className="font-serif text-base text-gold">₹{ret.refundAmount}</span>
-                      </div>
+                        {/* Order items */}
+                        <div className="space-y-4">
+                          {order.items.map(item => {
+                            const existingReturn = getProductReturn(order.orderId, item.productId);
+                            const eligible = isReturnEligible(order);
+                            const imgSrc = getProductImage(item);
+                            return (
+                              <div key={item.productId} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-16 h-16 border border-white/10 bg-white/5 flex-shrink-0 overflow-hidden">
+                                    {imgSrc
+                                      ? <img src={imgSrc} alt={item.name} className="w-full h-full object-cover"
+                                          onError={e => { e.target.style.display = 'none'; }} />
+                                      : <div className="w-full h-full flex items-center justify-center text-white/15 text-xs">✦</div>
+                                    }
+                                  </div>
+                                  <div>
+                                    <p className="text-base text-white/80 font-sans line-clamp-1">{item.name}</p>
+                                    <p className="text-sm text-white/40 mt-0.5">₹{item.price} · Qty: {item.quantity}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {existingReturn ? (
+                                    <span className="px-3 py-1 border border-white/20 text-white/70 text-xs tracking-wider uppercase">
+                                      Return: {existingReturn.status}
+                                    </span>
+                                  ) : order.status === 'Delivered' ? (
+                                    eligible ? (
+                                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                                        onClick={() => setReturnRequestModal({ orderId: order.orderId, item })}
+                                        className="px-5 py-2.5 border border-white/25 hover:border-white/50 text-white/60 hover:text-white text-xs tracking-wider uppercase transition-all">
+                                        Return Item
+                                      </motion.button>
+                                    ) : (
+                                      <span className="text-xs text-white/30 tracking-wider">Return window closed</span>
+                                    )
+                                  ) : (
+                                    <span className="text-xs text-white/30 tracking-wider">Return post-delivery</span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
+                </motion.div>
+              )}
+
+              {/* Returns tab */}
+              {tab === 'returns' && (
+                <motion.div key="returns" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }} className="space-y-5">
+                  {loadingReturns ? (
+                    <div className="flex justify-center py-14">
+                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+                        className="w-10 h-10 border border-white/10 border-t-white/60 rounded-full" />
                     </div>
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 border border-gold/10 bg-surface-light flex-shrink-0 overflow-hidden">
-                        {ret.productImage
-                          ? <img src={ret.productImage} alt={ret.productName} className="w-full h-full object-cover" />
-                          : <div className="w-full h-full flex items-center justify-center text-gold/15 text-xs">✦</div>}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-[#F5F0E8]/75 line-clamp-1">{ret.productName}</p>
-                        <p className="text-xs text-[#F5F0E8]/35 mt-1">Reason: {ret.reason}</p>
-                        {ret.description && (
-                          <p className="text-xs text-[#F5F0E8]/30 mt-1 italic border-l border-gold/15 pl-2 leading-relaxed">
-                            "{ret.description}"
-                          </p>
+                  ) : returns.length === 0 ? (
+                    <div className="text-center py-16 border border-white/10 bg-[#13281C]">
+                      <p className="text-white/20 text-3xl mb-3">◎</p>
+                      <p className="text-white/40 text-base">No active returns or refund requests.</p>
+                    </div>
+                  ) : (
+                    returns.map((ret, i) => (
+                      <motion.div key={ret._id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
+                        className="border border-white/10 bg-[#13281C] p-8 space-y-4 relative">
+                        <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-white/20" />
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
+                          <div>
+                            <p className="text-xs tracking-[0.18em] uppercase text-white/40 mb-1">Return / Order</p>
+                            <p className="text-base text-[#F5F0E8]/70">#{ret.orderId}</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className={`px-5 py-2 border text-xs tracking-wider uppercase ${RETURN_STATUS_STYLE[ret.status] || 'border-white/10 text-white/40'}`}>
+                              {ret.status}
+                            </span>
+                            <span className="font-serif text-lg text-white">₹{ret.refundAmount}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-4">
+                          <div className="w-16 h-16 border border-white/10 bg-white/5 flex-shrink-0 overflow-hidden">
+                            {ret.productImage
+                              ? <img src={ret.productImage} alt={ret.productName} className="w-full h-full object-cover" />
+                              : <div className="w-full h-full flex items-center justify-center text-white/15 text-xs">✦</div>}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-base text-[#F5F0E8]/75 line-clamp-1">{ret.productName}</p>
+                            <p className="text-sm text-[#F5F0E8]/35 mt-1">Reason: {ret.reason}</p>
+                            {ret.description && (
+                              <p className="text-sm text-[#F5F0E8]/30 mt-1 italic border-l border-white/15 pl-2 leading-relaxed">
+                                "{ret.description}"
+                              </p>
+                            )}
+                            <p className="text-xs text-[#F5F0E8]/25 mt-1.5 tracking-wider">Refund: {ret.refundMethod}</p>
+                          </div>
+                        </div>
+                        <ReturnTimeline currentStatus={ret.status} remarks={ret.adminRemarks} pickupDate={ret.pickupDate} />
+                      </motion.div>
+                    ))
+                  )}
+                </motion.div>
+              )}
+
+              {/* Addresses tab */}
+              {tab === 'address' && (
+                <motion.div key="address" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {addresses.map((addr, i) => (
+                      <motion.div key={addr.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
+                        whileHover={{ y: -3, borderColor: 'rgba(255,255,255,0.2)' }}
+                        className={`border p-7 transition-all duration-200 relative ${addr.isDefault ? 'border-white/30 bg-white/5' : 'border-white/10 bg-[#13281C]'}`}>
+                        <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-white/25" />
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <p className="text-base text-white/85 font-sans">{addr.label}</p>
+                            {addr.isDefault && <span className="px-2 py-0.5 border border-white/30 text-white/70 text-[9px] tracking-wider uppercase">Default</span>}
+                          </div>
+                          <div className="flex gap-1">
+                            <button onClick={() => setModal({ title: 'Edit Address', type: 'address', addrId: addr.id,
+                              fields: [{ key: 'label', label: 'Label' }, { key: 'address', label: 'Full Address', type: 'textarea' }, { key: 'pincode', label: 'Pincode' }],
+                              init: { label: addr.label, address: addr.address, pincode: addr.pincode } })}
+                              className="w-9 h-9 border border-white/15 flex items-center justify-center text-white/40 hover:text-white text-xs transition-all">
+                              ✎
+                            </button>
+                            <button onClick={() => setAddresses(prev => prev.filter(a => a.id !== addr.id))}
+                              className="w-9 h-9 border border-white/15 flex items-center justify-center text-white/40 hover:text-red-400 text-xs transition-all">
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                        <p className="text-sm text-white/60 leading-relaxed">{addr.address}</p>
+                        <p className="text-xs text-white/40 mt-1 tracking-wider">PIN: {addr.pincode}</p>
+                        {!addr.isDefault && (
+                          <button onClick={() => setAddresses(prev => prev.map(a => ({ ...a, isDefault: a.id === addr.id })))}
+                            className="mt-3 text-xs text-white/50 hover:text-white tracking-[0.15em] uppercase transition-colors">
+                            Set as default →
+                          </button>
                         )}
-                        <p className="text-[10px] text-[#F5F0E8]/25 mt-1.5 tracking-wider">Refund: {ret.refundMethod}</p>
-                      </div>
-                    </div>
-                    <ReturnTimeline currentStatus={ret.status} remarks={ret.adminRemarks} pickupDate={ret.pickupDate} />
-                  </motion.div>
-                ))
+                      </motion.div>
+                    ))}
+
+                    {/* Add new */}
+                    <motion.button whileHover={{ y: -3, borderColor: 'rgba(255,255,255,0.2)' }} whileTap={{ scale: 0.98 }}
+                      onClick={() => setModal({ title: 'Add New Address', type: 'address',
+                        fields: [{ key: 'label', label: 'Label' }, { key: 'address', label: 'Full Address', type: 'textarea' }, { key: 'pincode', label: 'Pincode' }],
+                        init: {} })}
+                      className="border border-dashed border-white/15 flex flex-col items-center justify-center gap-2 text-white/30 hover:text-white/60 transition-all min-h-[180px]">
+                      <span className="text-3xl">+</span>
+                      <span className="text-xs tracking-[0.2em] uppercase">Add New Address</span>
+                    </motion.button>
+                  </div>
+                </motion.div>
               )}
-            </motion.div>
-          )}
 
-          {/* Addresses tab */}
-          {tab === 'address' && (
-            <motion.div key="address" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {addresses.map((addr, i) => (
-                  <motion.div key={addr.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
-                    whileHover={{ y: -3, borderColor: 'rgba(201,168,76,0.3)' }}
-                    className={`border p-5 transition-all duration-200 relative ${addr.isDefault ? 'border-gold/30 bg-gold/3' : 'border-gold/10 bg-surface'}`}>
-                    <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-gold/25" />
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm text-[#F5F0E8]/80 font-sans">{addr.label}</p>
-                        {addr.isDefault && <span className="px-2 py-0.5 border border-gold/30 text-gold/60 text-[9px] tracking-wider uppercase">Default</span>}
-                      </div>
-                      <div className="flex gap-1">
-                        <button onClick={() => setModal({ title: 'Edit Address', type: 'address', addrId: addr.id,
-                          fields: [{ key: 'label', label: 'Label' }, { key: 'address', label: 'Full Address', type: 'textarea' }, { key: 'pincode', label: 'Pincode' }],
-                          init: { label: addr.label, address: addr.address, pincode: addr.pincode } })}
-                          className="w-7 h-7 border border-gold/15 flex items-center justify-center text-[#F5F0E8]/30 hover:text-gold text-[10px] transition-all">
-                          ✎
-                        </button>
-                        <button onClick={() => setAddresses(prev => prev.filter(a => a.id !== addr.id))}
-                          className="w-7 h-7 border border-gold/15 flex items-center justify-center text-[#F5F0E8]/30 hover:text-red-400/70 text-[10px] transition-all">
-                          ✕
-                        </button>
-                      </div>
-                    </div>
-                    <p className="text-xs text-[#F5F0E8]/50 leading-relaxed">{addr.address}</p>
-                    <p className="text-[10px] text-[#F5F0E8]/30 mt-1 tracking-wider">PIN: {addr.pincode}</p>
-                    {!addr.isDefault && (
-                      <button onClick={() => setAddresses(prev => prev.map(a => ({ ...a, isDefault: a.id === addr.id })))}
-                        className="mt-3 text-[10px] text-gold/50 hover:text-gold tracking-[0.15em] uppercase transition-colors">
-                        Set as default →
-                      </button>
-                    )}
-                  </motion.div>
-                ))}
+              {/* Settings tab */}
+              {tab === 'settings' && (
+                <motion.div key="settings" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}
+                  className="border border-white/10 bg-[#13281C] p-8 relative">
+                  <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-white/25" />
+                  {SETTINGS.map(s => <SettingsToggle key={s.label} {...s} />)}
+                  <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={handleLogout}
+                    className="w-full mt-6 py-5 border border-red-500/20 text-white hover:bg-red-500/10 hover:border-red-500/40 text-sm tracking-[0.2em] uppercase transition-all">
+                    Logout from NatureKart
+                  </motion.button>
+                </motion.div>
+              )}
 
-                {/* Add new */}
-                <motion.button whileHover={{ y: -3, borderColor: 'rgba(201,168,76,0.3)' }} whileTap={{ scale: 0.98 }}
-                  onClick={() => setModal({ title: 'Add New Address', type: 'address',
-                    fields: [{ key: 'label', label: 'Label' }, { key: 'address', label: 'Full Address', type: 'textarea' }, { key: 'pincode', label: 'Pincode' }],
-                    init: {} })}
-                  className="border border-dashed border-gold/15 flex flex-col items-center justify-center gap-2 text-[#F5F0E8]/25 hover:text-gold/50 transition-all min-h-[140px]">
-                  <span className="text-2xl">+</span>
-                  <span className="text-[10px] tracking-[0.2em] uppercase">Add New Address</span>
-                </motion.button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Settings tab */}
-          {tab === 'settings' && (
-            <motion.div key="settings" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}
-              className="border border-gold/10 bg-surface p-6 relative">
-              <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-gold/25" />
-              {SETTINGS.map(s => <SettingsToggle key={s.label} {...s} />)}
-              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={handleLogout}
-                className="w-full mt-6 py-4 border border-red-500/20 text-red-400/70 hover:text-red-400 hover:border-red-500/40 text-xs tracking-[0.2em] uppercase transition-all">
-                Logout from NatureKart
-              </motion.button>
-            </motion.div>
-          )}
-
-        </AnimatePresence>
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
     </div>
   );
