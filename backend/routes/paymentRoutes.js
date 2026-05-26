@@ -13,10 +13,19 @@ const { sendOrderConfirmationEmail } = require('../utils/emailService');
 
 const router = express.Router();
 
-const razorpay = new Razorpay({
-  key_id:     process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+/* Lazy Razorpay instance — only created when keys are present */
+function getRazorpay() {
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    return null;
+  }
+  if (!getRazorpay._instance) {
+    getRazorpay._instance = new Razorpay({
+      key_id:     process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+  }
+  return getRazorpay._instance;
+}
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */
 function generateOrderId() {
@@ -52,6 +61,9 @@ function calcEstimatedDelivery(deliveryType) {
 ──────────────────────────────────────────────────────────────────────────── */
 router.post('/create-order', async (req, res) => {
   try {
+    const razorpay = getRazorpay();
+    if (!razorpay) return res.status(503).json({ message: 'Payment gateway not configured' });
+
     const { amount, currency = 'INR', notes = {} } = req.body;
 
     if (!amount || amount <= 0) {
@@ -84,12 +96,27 @@ router.post('/create-order', async (req, res) => {
 ──────────────────────────────────────────────────────────────────────────── */
 router.post('/verify', async (req, res) => {
   try {
+    const razorpay = getRazorpay();
+    if (!razorpay) return res.status(503).json({ success: false, message: 'Payment gateway not configured' });
+
     const {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
       orderData,          // { items, address, deliveryType, shippingCost, subtotal, totalAmount, userId }
     } = req.body;
+
+    /* ── 0. Extract userId from JWT (more reliable than frontend) ── */
+    let authUserId = orderData.userId || null;
+    try {
+      const token = req.headers.authorization?.split(' ')[1];
+      if (token) {
+        const jwt = require('jsonwebtoken');
+        const SECRET = process.env.JWT_SECRET || 'naturekart_jwt_secret_2024';
+        const decoded = jwt.verify(token, SECRET);
+        if (decoded.id) authUserId = decoded.id;
+      }
+    } catch (_) { /* token might be absent for guest checkout */ }
 
     /* ── 1. Verify signature ── */
     const expectedSig = crypto
@@ -127,7 +154,7 @@ router.post('/verify', async (req, res) => {
         state:   orderData.address.state,
         pincode: orderData.address.pincode,
       },
-      userId:        orderData.userId || null,
+      userId:        authUserId,
       items: orderData.items.map(i => ({
         productId: String(i._id || i.productId || i.id),
         name:      i.name,

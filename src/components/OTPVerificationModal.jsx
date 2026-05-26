@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 /**
- * OTPVerificationModal
+ * OTPVerificationModal — Sage Green Theme
  * Props:
  *   isOpen        — boolean
  *   onClose       — fn()
@@ -63,11 +63,10 @@ export default function OTPVerificationModal({
 
   const handleDigitChange = (idx, val) => {
     const clean = val.replace(/\D/g, '');
-    if (!clean && val) return; // reject non-digits
+    if (!clean && val) return;
     const next = [...digits];
 
     if (clean.length > 1) {
-      /* Handle paste */
       const pasted = clean.slice(0, 6).split('');
       const filled = [...digits];
       pasted.forEach((d, i) => { if (idx + i < 6) filled[idx + i] = d; });
@@ -134,7 +133,7 @@ export default function OTPVerificationModal({
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)' }}
+          style={{ background: 'rgba(27,54,38,0.35)', backdropFilter: 'blur(8px)' }}
           onClick={e => { if (e.target === e.currentTarget) onClose(); }}
         >
           <motion.div
@@ -142,40 +141,44 @@ export default function OTPVerificationModal({
             animate={{ scale: 1,    opacity: 1, y: 0  }}
             exit={{    scale: 0.88, opacity: 0, y: 32  }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            className="w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden"
+            style={{ backgroundColor: '#E5EFE9', borderColor: 'rgba(27,54,38,0.2)' }}
+            className="w-full max-w-sm border rounded-2xl shadow-2xl overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-gradient-to-br from-green-800 to-emerald-600 px-8 pt-8 pb-6 text-center relative">
+            <div style={{ background: 'linear-gradient(135deg, #1B3626 0%, #2D543B 100%)' }}
+              className="px-8 pt-8 pb-6 text-center relative">
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-all"
+                style={{ backgroundColor: 'rgba(210,229,216,0.15)', color: '#D2E5D8' }}
+                className="absolute top-4 right-4 w-8 h-8 hover:bg-white/20 rounded-full flex items-center justify-center transition-all text-sm font-bold"
               >✕</button>
               <motion.div
                 animate={{ rotate: [0, 10, -10, 0] }}
                 transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                 className="text-4xl mb-3"
               >📧</motion.div>
-              <h2 className="text-white font-black text-xl mb-1">{title}</h2>
-              <p className="text-emerald-200 text-sm">
+              <h2 style={{ color: '#D2E5D8' }} className="font-black text-xl mb-1">{title}</h2>
+              <p style={{ color: 'rgba(210,229,216,0.75)' }} className="text-sm">
                 {subtitle || `We sent a 6-digit code to`}
               </p>
               {maskedEmail && (
-                <p className="text-white font-bold text-sm mt-1">{maskedEmail}</p>
+                <p style={{ color: '#A8D5B5' }} className="font-bold text-sm mt-1">{maskedEmail}</p>
               )}
             </div>
 
             {/* Body */}
-            <div className="px-8 py-7">
+            <div className="px-8 py-7" style={{ backgroundColor: '#E5EFE9' }}>
               {/* Alerts */}
               <AnimatePresence>
                 {(error || success) && (
                   <motion.div
                     initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                    className={`mb-5 p-3 rounded-xl text-sm font-medium text-center ${
-                      success
-                        ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
-                        : 'bg-red-50 border border-red-200 text-red-600'
-                    }`}
+                    style={{
+                      backgroundColor: success ? 'rgba(27,54,38,0.08)' : 'rgba(239,68,68,0.08)',
+                      borderColor: success ? 'rgba(27,54,38,0.3)' : 'rgba(239,68,68,0.3)',
+                      color: success ? '#1B3626' : '#dc2626',
+                    }}
+                    className="mb-5 p-3 rounded-xl text-sm font-medium text-center border"
                   >
                     {success || `⚠️ ${error}`}
                   </motion.div>
@@ -194,11 +197,13 @@ export default function OTPVerificationModal({
                     maxLength={6}
                     inputMode="numeric"
                     whileFocus={{ scale: 1.08 }}
-                    className={`w-11 h-14 text-center text-xl font-black rounded-xl border-2 outline-none transition-all
-                      ${d ? 'border-emerald-500 bg-emerald-50 text-emerald-800 shadow-md shadow-emerald-100'
-                          : 'border-stone-200 bg-stone-50 text-stone-800'}
-                      ${error ? 'border-red-300 bg-red-50' : ''}
-                      focus:border-emerald-500 focus:shadow-[0_0_0_3px_rgba(16,185,129,0.18)]`}
+                    style={{
+                      backgroundColor: d ? 'rgba(27,54,38,0.1)' : '#F4F8F6',
+                      borderColor: d ? '#1B3626' : error ? '#ef4444' : 'rgba(27,54,38,0.2)',
+                      color: '#1B3626',
+                      outline: 'none',
+                    }}
+                    className="w-11 h-14 text-center text-xl font-black rounded-xl border-2 transition-all"
                   />
                 ))}
               </div>
@@ -207,9 +212,10 @@ export default function OTPVerificationModal({
               <motion.button
                 onClick={handleVerify}
                 disabled={loading || otp.length < 6}
-                whileHover={{ scale: 1.02, boxShadow: '0 16px 32px rgba(16,185,129,0.3)' }}
+                whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
-                className="w-full py-3.5 bg-gradient-to-r from-green-600 to-emerald-500 text-white font-extrabold rounded-2xl shadow-lg shadow-green-200/60 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                style={{ backgroundColor: '#1B3626', color: '#ffffff' }}
+                className="w-full py-3.5 font-extrabold text-sm rounded-xl shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shimmer-btn-glow"
               >
                 {loading ? (
                   <>
@@ -218,9 +224,9 @@ export default function OTPVerificationModal({
                       transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
                       className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full inline-block"
                     />
-                    Verifying…
+                    <span style={{ color: '#ffffff' }}>Verifying…</span>
                   </>
-                ) : '✅ Verify OTP'}
+                ) : <span style={{ color: '#ffffff' }}>✅ Verify OTP</span>}
               </motion.button>
 
               {/* Resend */}
@@ -231,30 +237,31 @@ export default function OTPVerificationModal({
                     disabled={resendLoading}
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
-                    className="text-emerald-600 font-bold text-sm hover:text-emerald-700 transition-colors disabled:opacity-60 flex items-center gap-1 mx-auto"
+                    style={{ color: '#1B3626' }}
+                    className="font-bold text-sm hover:opacity-70 transition-opacity disabled:opacity-60 flex items-center gap-1 mx-auto"
                   >
                     {resendLoading ? (
                       <>
                         <motion.span
                           animate={{ rotate: 360 }}
                           transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
-                          className="w-4 h-4 border-2 border-emerald-300 border-t-emerald-600 rounded-full inline-block"
+                          className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full inline-block"
                         />
-                        Sending…
+                        <span style={{ color: '#1B3626' }}>Sending…</span>
                       </>
                     ) : '🔄 Resend OTP'}
                   </motion.button>
                 ) : (
-                  <p className="text-stone-400 text-sm">
+                  <p style={{ color: '#5C7C68' }} className="text-sm">
                     Resend OTP in{' '}
-                    <span className="font-bold text-emerald-600">
+                    <span style={{ color: '#1B3626' }} className="font-bold">
                       {String(Math.floor(countdown / 60)).padStart(2, '0')}:{String(countdown % 60).padStart(2, '0')}
                     </span>
                   </p>
                 )}
               </div>
 
-              <p className="mt-4 text-center text-xs text-stone-400">
+              <p style={{ color: '#5C7C68' }} className="mt-4 text-center text-xs opacity-70">
                 Check spam folder if email not received
               </p>
             </div>

@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
 import AdminLayout from './AdminLayout.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { adminGetProducts, adminAddProduct, adminUpdateProduct, adminDeleteProduct } from '../../services/api.js';
 
-const API = 'http://localhost:5001/api/admin';
 const CATEGORIES = ['Ayurveda', 'Supplements', 'Skincare', 'Herbal Tea', 'Hair Care', 'Essential Oils'];
 
 const emptyForm = { name: '', price: '', category: 'Ayurveda', description: '', image: '', icon: '🌿', inStock: true };
@@ -28,7 +27,7 @@ function ProductModal({ product, onClose, onSave }) {
       await onSave({ ...form, price: Number(form.price) });
       onClose();
     } catch (e) {
-      setErr(e.response?.data?.message || 'Save failed');
+      setErr(e.response?.data?.message || e.message || 'Save failed');
     } finally { setSaving(false); }
   };
 
@@ -140,7 +139,6 @@ function DeleteModal({ name, onConfirm, onClose }) {
 }
 
 export default function AdminProducts() {
-  const { token } = useAuth();
   const [products, setProducts] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [showAdd, setShowAdd]   = useState(false);
@@ -149,25 +147,23 @@ export default function AdminProducts() {
   const [search, setSearch]     = useState('');
   const [catFilter, setCatFilter] = useState('All');
 
-  const headers = { Authorization: `Bearer ${token}` };
-
   const fetchProducts = () =>
-    axios.get(`${API}/products`, { headers }).then(r => setProducts(r.data)).finally(() => setLoading(false));
+    adminGetProducts().then(data => setProducts(data)).finally(() => setLoading(false));
 
   useEffect(() => { fetchProducts(); }, []);
 
   const handleAdd = async (form) => {
-    await axios.post(`${API}/products`, form, { headers });
+    await adminAddProduct(form);
     await fetchProducts();
   };
 
   const handleEdit = async (form) => {
-    await axios.put(`${API}/products/${editing._id}`, form, { headers });
+    await adminUpdateProduct(editing._id, form);
     await fetchProducts();
   };
 
   const handleDelete = async () => {
-    await axios.delete(`${API}/products/${deleting._id}`, { headers });
+    await adminDeleteProduct(deleting._id);
     setDeleting(null);
     await fetchProducts();
   };

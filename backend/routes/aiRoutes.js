@@ -9,10 +9,17 @@ const Product = require('../models/Product');
 
 const router = express.Router();
 
-const openai = new OpenAI({ 
-  apiKey: process.env.GEMINI_API_KEY,
-  baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/'
-});
+/* Lazy OpenAI/Gemini client — only created when API key is present */
+function getOpenAI() {
+  if (!process.env.GEMINI_API_KEY) return null;
+  if (!getOpenAI._instance) {
+    getOpenAI._instance = new OpenAI({
+      apiKey:  process.env.GEMINI_API_KEY,
+      baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+    });
+  }
+  return getOpenAI._instance;
+}
 
 /* ── Category → keyword mapping for MongoDB product search ─────────────────── */
 const CATEGORY_KEYWORDS = {
@@ -105,6 +112,9 @@ function parseAIResponse(fullText) {
 /* ══ POST /api/ai/chat ═══════════════════════════════════════════════════════ */
 router.post('/chat', async (req, res) => {
   try {
+    const openai = getOpenAI();
+    if (!openai) return res.status(503).json({ message: 'AI assistant not configured (missing API key)', products: [], category: 'general', followUpSuggestions: [] });
+
     const { message, conversationHistory = [] } = req.body;
     if (!message || !message.trim()) {
       return res.status(400).json({ message: 'Message is required' });
@@ -149,6 +159,9 @@ router.post('/chat', async (req, res) => {
 /* ══ POST /api/ai/quick-chat ═════════════════════════════════════════════════ */
 router.post('/quick-chat', async (req, res) => {
   try {
+    const openai = getOpenAI();
+    if (!openai) return res.status(503).json({ message: 'AI assistant not configured', category: 'general' });
+
     const { message, conversationHistory = [] } = req.body;
     if (!message || !message.trim()) {
       return res.status(400).json({ message: 'Message is required' });

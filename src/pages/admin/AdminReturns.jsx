@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
 import AdminLayout from './AdminLayout.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
-
-const API = 'http://localhost:5001/api';
+import { adminGetReturns, adminUpdateReturn, sendReturnOtp, verifyReturnOtp } from '../../services/api.js';
 
 const STATUS_STYLE = {
   'Requested':       { bg: 'bg-amber-500/20',   text: 'text-amber-400',   border: 'border-amber-500/30'  },
@@ -28,14 +26,14 @@ function ReturnOtpModal({ orderId, onSendOtp, onVerify, onClose, sending, verify
   const handleSend = async () => {
     setSendError('');
     try { await onSendOtp(); setOtpSent(true); }
-    catch (e) { setSendError(e.response?.data?.message || 'Failed to send OTP'); }
+    catch (e) { setSendError(e.response?.data?.message || e.message || 'Failed to send OTP'); }
   };
 
   const handleVerify = async () => {
     if (!otp.trim() || otp.length !== 6) { setVerifyError('Enter the 6-digit OTP'); return; }
     setVerifyError('');
     try { await onVerify(otp); onClose(); }
-    catch (e) { setVerifyError(e.response?.data?.message || 'OTP verification failed'); }
+    catch (e) { setVerifyError(e.response?.data?.message || e.message || 'OTP verification failed'); }
   };
 
   return (
@@ -229,41 +227,38 @@ function ReturnDrawer({ ret, onClose, onStatusChange, onSendReturnOtp, onVerifyR
 
 /* ── Main ─────────────────────────────────────────────────────────────────── */
 export default function AdminReturns() {
-  const { token } = useAuth();
   const [returns,      setReturns]      = useState([]);
   const [loading,      setLoading]      = useState(true);
   const [selected,     setSelected]     = useState(null);
   const [statusFilter, setStatusFilter] = useState('All');
   const [toast,        setToast]        = useState('');
 
-  const headers = { Authorization: `Bearer ${token}` };
-
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3500); };
 
   const fetchReturns = () =>
-    axios.get(`${API}/admin/returns`, { headers }).then(r => setReturns(r.data)).finally(() => setLoading(false));
+    adminGetReturns().then(data => setReturns(data)).finally(() => setLoading(false));
 
   useEffect(() => { fetchReturns(); }, []);
 
   const handleStatusChange = async (id, body) => {
-    await axios.put(`${API}/admin/returns/${id}`, body, { headers });
+    await adminUpdateReturn(id, body);
     await fetchReturns();
     showToast(`Return status updated to "${body.status}"`);
   };
 
   const handleSendReturnOtp = async (orderId) => {
-    await axios.post(`${API}/orders/send-return-otp`, { orderId }, { headers });
+    await sendReturnOtp({ orderId });
     showToast('Return OTP sent to customer email!');
   };
 
   const handleVerifyReturnOtp = async (orderId, otp) => {
-    await axios.post(`${API}/orders/verify-return-otp`, { orderId, otp }, { headers });
+    await verifyReturnOtp({ orderId, otp });
     await fetchReturns();
     showToast('✅ Return OTP verified — Refund Initiated!');
   };
 
   const handleRefundComplete = async (id) => {
-    await axios.put(`${API}/admin/returns/${id}`, { status: 'Refund Completed' }, { headers });
+    await adminUpdateReturn(id, { status: 'Refund Completed' });
     await fetchReturns();
     setSelected(null);
     showToast('✅ Refund marked as Completed!');

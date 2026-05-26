@@ -145,10 +145,10 @@ export default function SearchOverlay() {
   return (
     <div ref={containerRef} className="relative w-full max-w-lg" id="search-container">
       {/* ── Search Input Box ── */}
-      <div className={`relative flex items-center h-10 sm:h-11 rounded-2xl bg-stone-50 border-2 transition-all duration-300 ${
+      <div className={`relative flex items-center h-10 sm:h-11 rounded-2xl bg-stone-50 border-2 transition-all duration-300 overflow-hidden ${
         focused ? 'border-emerald-500 bg-white ring-4 ring-emerald-500/10' : 'border-stone-100 hover:border-stone-200'
       }`}>
-        <span className="pl-3.5 text-stone-400 text-sm">🔍</span>
+        <span className="pl-3.5 text-stone-400 text-sm flex-shrink-0">🔍</span>
         
         <input 
           type="text" 
@@ -157,7 +157,7 @@ export default function SearchOverlay() {
           onFocus={() => setFocused(true)}
           onKeyDown={e => e.key === 'Enter' && handleSearchSubmit()}
           placeholder="Search products, benefits, ayurveda..." 
-          className="w-full h-full pl-2 pr-20 bg-transparent text-sm text-stone-800 placeholder-stone-400 font-semibold focus:outline-none"
+          className="w-full h-full pl-3 pr-20 bg-transparent text-sm text-stone-800 placeholder-stone-400 font-semibold focus:outline-none"
         />
 
         {/* Action icons inside input bar */}

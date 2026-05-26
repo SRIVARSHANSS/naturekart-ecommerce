@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import axios from 'axios';
 import {
   LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip,
@@ -8,8 +7,7 @@ import {
 } from 'recharts';
 import AdminLayout from './AdminLayout.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
-
-const API = 'http://localhost:5001/api/admin';
+import { adminGetDashboard, adminSeedOrders } from '../../services/api.js';
 
 /* ── Animated number ─────────────────────────────────────────────────────── */
 function CountUp({ target, prefix = '', suffix = '', duration = 1500 }) {
@@ -58,26 +56,23 @@ const STATUS_COLORS = {
 };
 
 export default function AdminDashboard() {
-  const { token } = useAuth();
   const [data, setData]     = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]   = useState('');
 
-  const headers = { Authorization: `Bearer ${token}` };
-
   useEffect(() => {
-    axios.get(`${API}/dashboard`, { headers })
-      .then(r => setData(r.data))
-      .catch(e => setError(e.response?.data?.message || 'Failed to load dashboard'))
+    adminGetDashboard()
+      .then(d => setData(d))
+      .catch(e => setError(e.response?.data?.message || e.message || 'Failed to load dashboard'))
       .finally(() => setLoading(false));
   }, []);
 
   const seedOrders = async () => {
     try {
-      await axios.post(`${API}/seed-orders`, {}, { headers });
-      const r = await axios.get(`${API}/dashboard`, { headers });
-      setData(r.data);
-    } catch (e) { setError(e.response?.data?.message || 'Seed failed'); }
+      await adminSeedOrders();
+      const d = await adminGetDashboard();
+      setData(d);
+    } catch (e) { setError(e.response?.data?.message || e.message || 'Seed failed'); }
   };
 
   if (loading) return (

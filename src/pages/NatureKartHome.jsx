@@ -1,24 +1,15 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, useInView, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion, useInView, useScroll, useTransform, AnimatePresence, useMotionValue } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useCart }     from "../context/CartContext.jsx";
 import { useWishlist } from "../context/WishlistContext.jsx";
 import { useAuth }     from "../context/AuthContext.jsx";
 import { ALL_PRODUCTS } from "../data/products.js"; // kept as fallback
 import { useProducts } from "../hooks/useProducts.js";
-import SearchOverlay from "../components/SearchOverlay.jsx";
+import Navbar from "../components/Navbar.jsx";
+import Footer from "../components/Footer.jsx";
 
 // ─── Utility ──────────────────────────────────────────────────────────────────
-const useScrolled = () => {
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-  return scrolled;
-};
-
 const FadeUp = ({ children, delay = 0, className = "" }) => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
@@ -66,224 +57,75 @@ const StaggerItem = ({ children, className = "" }) => (
 // ─── Image Placeholder ────────────────────────────────────────────────────────
 const ImgPlaceholder = ({ className = "", label = "Image", icon = "🌿" }) => (
   <div
-    className={`flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 rounded-2xl border-2 border-dashed border-green-200 text-green-400 select-none ${className}`}
+    className={`flex flex-col items-center justify-center bg-surface-light rounded-md border border-gold/20 text-gold/40 select-none ${className}`}
   >
     <span className="text-3xl mb-2">{icon}</span>
     <span className="text-xs font-semibold tracking-widest uppercase opacity-60">{label}</span>
   </div>
 );
 
-const Navbar = ({ onNavigate }) => {
-  const scrolled = useScrolled();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const { cartCount }  = useCart();
-  const { wishlist }   = useWishlist();
-  const { user, isLoggedIn } = useAuth();
-  const navigate = useNavigate();
-
-  /* Hidden admin entry: double-click the 🌿 logo */
-  const clickTimerRef = useRef(null);
-  const handleLogoClick = () => {
-    if (clickTimerRef.current) {
-      // Second click — it's a double-click
-      clearTimeout(clickTimerRef.current);
-      clickTimerRef.current = null;
-      navigate('/admin/dashboard');
-    } else {
-      // First click — wait 400 ms for second
-      clickTimerRef.current = setTimeout(() => {
-        clickTimerRef.current = null;
-        navigate('/');
-      }, 400);
-    }
-  };
-
-  const navLinks = [
-    { label: "Home",         action: () => navigate("/"),             page: "/"             },
-    { label: "Shop",         action: () => navigate("/shop"),         page: "/shop"         },
-    { label: "About",        action: () => navigate("/about"),        page: "/about"        },
-    { label: "Contact",      action: () => navigate("/contact"),      page: "/contact"      },
-    { label: "🤖 AI Health", action: () => navigate("/ai-assistant"), page: "/ai-assistant", pill: true },
-  ];
-
-  return (
-    <motion.nav
-      initial={{ y: -80, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-white/80 backdrop-blur-xl shadow-lg shadow-green-100/50 border-b border-green-100"
-          : "bg-transparent"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 lg:h-20">
-
-          {/* Logo — double-click secretly opens admin panel */}
-          <motion.button
-            onClick={handleLogoClick}
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.97 }}
-            className="flex items-center gap-2 select-none"
-          >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-300/40">
-              <span className="text-white text-lg">🌿</span>
-            </div>
-            <span className="text-xl font-bold tracking-tight drop-shadow-md"
-              style={{ color: scrolled ? "#166534" : "#fff" }}>
-              Nature<span style={{ color: scrolled ? "#10b981" : "#6ee7b7" }}>Kart</span>
-            </span>
-          </motion.button>
-
-          {/* Search bar inside Navigation Bar */}
-          <div className="hidden md:block flex-1 max-w-[280px] lg:max-w-[340px] mx-4">
-            <SearchOverlay />
-          </div>
-
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map(({ label, action, pill }) => (
-              <motion.button
-                key={label}
-                onClick={action}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={pill
-                  ? `px-4 py-2 text-sm font-bold rounded-xl bg-gradient-to-r from-green-600 to-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-green-300/50 transition-all`
-                  : `px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-200 ${
-                    scrolled
-                      ? "text-stone-600 hover:text-green-700 hover:bg-green-50"
-                      : "text-white/90 hover:text-white hover:bg-white/15"
-                  }`
-                }
-              >
-                {label}
-              </motion.button>
-            ))}
-          </div>
-
-          {/* Icons */}
-          <div className="hidden md:flex items-center gap-2">
-            {/* Wishlist */}
-            <motion.button onClick={() => navigate("/wishlist")}
-              whileHover={{ scale: 1.1, y: -2 }} whileTap={{ scale: 0.9 }}
-              className={`relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${
-                scrolled ? "text-stone-600 hover:text-red-500 hover:bg-red-50" : "text-white/80 hover:text-white hover:bg-white/15"
-              }`} aria-label="Wishlist">
-              <span className="text-lg">❤️</span>
-              {wishlist.length > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
-                  {wishlist.length}
-                </span>
-              )}
-            </motion.button>
-
-            {/* Profile / Sign In */}
-            <motion.button onClick={() => navigate(isLoggedIn ? "/profile" : "/login")}
-              whileHover={{ scale: 1.1, y: -2 }} whileTap={{ scale: 0.9 }}
-              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 overflow-hidden ${
-                scrolled ? "text-stone-600 hover:text-green-700 hover:bg-green-50" : "text-white/80 hover:text-white hover:bg-white/15"
-              }`} aria-label="Profile">
-              {isLoggedIn ? (
-                <div className="w-full h-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm">
-                  {user?.name?.[0]?.toUpperCase() || "U"}
-                </div>
-              ) : (
-                <span className="text-lg">👤</span>
-              )}
-            </motion.button>
-
-            {/* Cart */}
-            <motion.button onClick={() => navigate("/cart")}
-              whileHover={{ scale: 1.1, y: -2 }} whileTap={{ scale: 0.9 }}
-              className={`relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${
-                scrolled ? "text-stone-600 hover:text-green-700 hover:bg-green-50" : "text-white/80 hover:text-white hover:bg-white/15"
-              }`} aria-label="Cart">
-              <span className="text-lg">🛒</span>
-              {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-emerald-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
-                  {cartCount}
-                </span>
-              )}
-            </motion.button>
-
-            {/* Sign In (Hidden if logged in) */}
-            {!isLoggedIn && (
-              <motion.button onClick={() => navigate("/login")}
-                whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.95 }}
-                className={`ml-2 px-5 py-2.5 text-sm font-semibold rounded-xl shadow-lg transition-all duration-200 ${
-                  scrolled
-                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-green-300/40"
-                    : "bg-white/20 backdrop-blur-sm border border-white/30 text-white"
-                }`}>
-                Sign In
-              </motion.button>
-            )}
-          </div>
-
-          {/* Mobile Hamburger */}
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden w-10 h-10 flex flex-col items-center justify-center gap-1.5"
-          >
-            {["top", "mid", "bot"].map((pos) => (
-              <span
-                key={pos}
-                className={`w-6 h-0.5 rounded transition-all ${scrolled ? "bg-stone-700" : "bg-white"} ${
-                  pos === "top" && menuOpen ? "rotate-45 translate-y-2" : ""
-                } ${pos === "mid" && menuOpen ? "opacity-0" : ""} ${
-                  pos === "bot" && menuOpen ? "-rotate-45 -translate-y-2" : ""
-                }`}
-              />
-            ))}
-          </motion.button>
-        </div>
-      </div>
-
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {menuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="md:hidden bg-white/95 backdrop-blur-xl border-t border-green-100 px-4 pb-4"
-          >
-            {navLinks.map(({ label, action, page }) => (
-              <button
-                key={label}
-                onClick={() => { action(); setMenuOpen(false); }}
-                className="block w-full text-left py-3 text-stone-700 font-semibold border-b border-stone-100 hover:text-green-700"
-              >
-                {label}
-              </button>
-            ))}
-            {!isLoggedIn && (
-              <button onClick={() => navigate("/login")}
-                className="mt-4 w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold rounded-xl">
-                Sign In
-              </button>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.nav>
-  );
-};
+// ═══════════════════════════════════════════════════════════════════════════════
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 2. HERO SECTION — VIDEO BACKGROUND
 // ═══════════════════════════════════════════════════════════════════════════════
+const WordAnim = ({ text }) => {
+  const container = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.03 }
+    }
+  };
+  const child = {
+    hidden: { opacity: 0, y: 35 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
+    }
+  };
+  return (
+    <motion.span variants={container} initial="hidden" animate="visible" className="inline-flex flex-wrap">
+      {text.split(" ").map((word, wordIdx) => (
+        <span key={wordIdx} className="whitespace-nowrap mr-3.5 inline-flex">
+          {Array.from(word).map((char, charIdx) => (
+            <motion.span key={charIdx} variants={child} className="inline-block">
+              {char}
+            </motion.span>
+          ))}
+        </span>
+      ))}
+    </motion.span>
+  );
+};
+
 const Hero = ({ onNavigate }) => {
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 400], [0, 80]);
+  
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const handleMouseMove = (e) => {
+    const { clientX, clientY } = e;
+    const { innerWidth, innerHeight } = window;
+    const x = (clientX - innerWidth / 2) / (innerWidth / 2);
+    const y = (clientY - innerHeight / 2) / (innerHeight / 2);
+    mouseX.set(x);
+    mouseY.set(y);
+  };
+
+  const leaf1X = useTransform(mouseX, [-1, 1], [-25, 25]);
+  const leaf1Y = useTransform(mouseY, [-1, 1], [-25, 25]);
+  const leaf2X = useTransform(mouseX, [-1, 1], [30, -30]);
+  const leaf2Y = useTransform(mouseY, [-1, 1], [30, -30]);
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden pt-20">
-
+    <section 
+      onMouseMove={handleMouseMove}
+      className="relative min-h-screen flex items-center overflow-hidden pt-20 bg-bg dark-section"
+    >
       <video
         autoPlay loop muted playsInline preload="auto"
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
@@ -292,81 +134,99 @@ const Hero = ({ onNavigate }) => {
         <source src="/videos/hero-bg.mp4" type="video/mp4" />
       </video>
 
+      {/* Dark luxury bottom-to-top gradient mask */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           zIndex: 1,
-          background: "linear-gradient(135deg, rgba(5,46,22,0.75) 0%, rgba(6,78,59,0.62) 50%, rgba(5,46,22,0.58) 100%)",
+          background: "linear-gradient(to top, rgba(13,13,11,0.98) 0%, rgba(13,13,11,0.7) 60%, rgba(13,13,11,0.2) 100%)",
         }}
       />
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           zIndex: 2,
-          background: "radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.40) 100%)",
+          background: "radial-gradient(circle at center, transparent 30%, rgba(13,13,11,0.6) 100%)",
         }}
       />
+
+      {/* Parallax Drifting Leaves */}
+      <motion.div 
+        style={{ x: leaf1X, y: leaf1Y, zIndex: 2 }}
+        animate={{ rotate: 360 }}
+        transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
+        className="absolute top-24 left-10 w-28 h-28 pointer-events-none opacity-[0.12] hidden md:block"
+      >
+        <svg viewBox="0 0 100 100" fill="none" stroke="#C9A84C" strokeWidth="1.5">
+          <path d="M50,0 C65,30 65,70 50,100 C35,70 35,30 50,0 Z" />
+          <path d="M50,0 Q55,45 50,100" />
+        </svg>
+      </motion.div>
+      <motion.div 
+        style={{ x: leaf2X, y: leaf2Y, zIndex: 2 }}
+        animate={{ rotate: -360 }}
+        transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
+        className="absolute bottom-24 right-12 w-32 h-32 pointer-events-none opacity-[0.15] hidden md:block"
+      >
+        <svg viewBox="0 0 100 100" fill="none" stroke="#C9A84C" strokeWidth="1">
+          <path d="M50,0 C80,25 80,75 50,100 C20,75 20,25 50,0 Z" />
+          <path d="M50,0 L50,100" />
+          <path d="M50,20 Q65,40 50,60" />
+          <path d="M50,40 Q35,60 50,80" />
+        </svg>
+      </motion.div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative" style={{ zIndex: 3 }}>
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center py-16 lg:py-24">
 
           {/* Text Side */}
-          <div>
+          <div className="text-left">
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 mb-6"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm bg-surface-light border border-gold/20 mb-6"
             >
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-white text-sm font-semibold tracking-wide">AI-Powered Organic Marketplace</span>
+              <span className="w-2 h-2 rounded-full bg-gold animate-pulse" />
+              <span className="text-gold text-xs font-sans font-bold tracking-widest uppercase">AI-Powered Organic Apothecary</span>
             </motion.div>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-[1.08] tracking-tight mb-6"
-              style={{ textShadow: "0 2px 24px rgba(0,0,0,0.35)" }}
+            <h1
+              className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-serif font-bold text-white leading-[1.08] tracking-tight mb-6"
+              style={{ textShadow: "0 2px 24px rgba(0,0,0,0.5)" }}
             >
-              100% Natural &amp;{" "}
-              <span className="relative inline-block">
-                <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-green-200">
-                  Organic
-                </span>
-                <svg className="absolute -bottom-2 left-0 w-full" height="8" viewBox="0 0 200 8" fill="none">
-                  <path d="M2 6C40 2 80 2 100 4C120 6 160 6 198 2" stroke="#6ee7b7" strokeWidth="3" strokeLinecap="round" />
-                </svg>
-              </span>{" "}
-              Products
-            </motion.h1>
+              <WordAnim text="100% Natural & Organic" />
+              <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-light to-gold">
+                Products
+              </span>
+            </h1>
 
             <motion.p
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.35 }}
-              className="text-lg text-white/80 leading-relaxed mb-8 max-w-lg"
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="text-base text-gold-dim font-sans leading-relaxed mb-8 max-w-lg"
             >
-              Shop herbal, eco-friendly, and sustainable products — powered by AI recommendations tailored to your health needs.
+              Shop herbal, eco-friendly, and sustainable products — powered by bespoke AI recommendations tailored to your unique wellness goals.
             </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.45 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
               className="flex flex-wrap gap-4 mb-10"
             >
-              {/* NAVIGATION: Shop Now → goes to /shop */}
               <motion.button
                 onClick={() => onNavigate("shop")}
-                whileHover={{ scale: 1.04, boxShadow: "0 20px 40px rgba(16,185,129,0.50)" }}
-                whileTap={{ scale: 0.96 }}
-                className="px-8 py-4 bg-gradient-to-r from-green-400 to-emerald-500 text-white font-bold text-base rounded-2xl shadow-xl shadow-green-900/40 transition-all duration-200"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="px-8 py-4 bg-gradient-to-r from-gold via-gold-light to-gold text-bg font-sans font-bold tracking-widest uppercase text-xs rounded-[2px] shadow-lg shadow-gold/10 shimmer-btn-glow"
               >
                 Shop Now →
               </motion.button>
-              {/* NAVIGATION: Explore Products → also goes to /shop */}
               <motion.button
                 onClick={() => onNavigate("shop")}
-                whileHover={{ scale: 1.04, backgroundColor: "rgba(255,255,255,0.25)" }}
-                whileTap={{ scale: 0.96 }}
-                className="px-8 py-4 bg-white/15 backdrop-blur-sm text-white font-bold text-base rounded-2xl border-2 border-white/30 shadow-lg transition-all duration-200"
+                whileHover={{ scale: 1.03, backgroundColor: "rgba(201, 168, 76, 0.05)" }}
+                whileTap={{ scale: 0.97 }}
+                className="px-8 py-4 bg-transparent text-gold font-sans font-bold tracking-widest uppercase text-xs rounded-[2px] border border-gold/40 shadow-lg transition-colors"
               >
                 Explore Products
               </motion.button>
@@ -374,17 +234,17 @@ const Hero = ({ onNavigate }) => {
 
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="flex gap-8"
+              transition={{ delay: 0.75 }}
+              className="flex gap-8 border-t border-gold/10 pt-6"
             >
               {[
-                { val: "500+", label: "Products" },
-                { val: "12K+", label: "Happy Customers" },
-                { val: "100%", label: "Organic" },
+                { val: "500+", label: "Pure Formulas" },
+                { val: "12K+", label: "Patrons" },
+                { val: "100%", label: "Lab Verified" },
               ].map(({ val, label }) => (
                 <div key={label}>
-                  <div className="text-2xl font-extrabold text-white drop-shadow">{val}</div>
-                  <div className="text-xs text-white/60 font-semibold tracking-wide uppercase mt-0.5">{label}</div>
+                  <div className="text-xl font-serif font-bold text-white">{val}</div>
+                  <div className="text-[10px] text-gold-dim font-sans font-semibold tracking-wider uppercase mt-0.5">{label}</div>
                 </div>
               ))}
             </motion.div>
@@ -393,25 +253,35 @@ const Hero = ({ onNavigate }) => {
           {/* Image / Product Side */}
           <motion.div
             style={{ y }}
-            initial={{ opacity: 0, scale: 0.9, x: 40 }}
-            animate={{ opacity: 1, scale: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="relative flex justify-center items-center"
           >
-            <div className="absolute w-72 h-72 bg-green-200 rounded-full blur-3xl opacity-30" />
+            <div className="absolute w-72 h-72 bg-gold/10 rounded-full blur-3xl opacity-30" />
             <motion.div
-              animate={{ y: [-10, 10, -10] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              animate={{ y: [-12, 12, -12] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
               className="relative z-10"
             >
               <img
                 src="/images/hero-product.png"
                 alt="Hero Product"
-                className="w-72 md:w-80 lg:w-96 object-contain mx-auto drop-shadow-[0_25px_50px_rgba(0,0,0,0.25)]"
+                className="w-72 md:w-80 lg:w-96 object-contain mx-auto drop-shadow-[0_30px_60px_rgba(201,168,76,0.15)]"
               />
             </motion.div>
           </motion.div>
         </div>
+      </div>
+
+      {/* Pulsing Thin Golden Scroll Indicator */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-10">
+        <span className="text-[9px] font-sans text-gold tracking-widest uppercase opacity-60">Scroll</span>
+        <motion.div 
+          animate={{ y: [0, 8, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+          className="w-[1px] h-10 bg-gradient-to-b from-gold to-transparent" 
+        />
       </div>
     </section>
   );
@@ -419,46 +289,41 @@ const Hero = ({ onNavigate }) => {
 
 // ─── 3. CATEGORY SECTION ─────────────────────────────────────────────────────
 const categories = [
-  { name: "Herbal Products", icon: "🌿", desc: "Roots, leaves & extracts", color: "from-green-100 to-green-50" },
-  { name: "Organic Foods",   icon: "🥗", desc: "Wholesome & pure",         color: "from-lime-100 to-lime-50" },
-  { name: "Skincare",        icon: "✨", desc: "Natural glow, zero harm",   color: "from-yellow-100 to-yellow-50" },
-  { name: "Herbal Tea",      icon: "🍵", desc: "Calm & energize",           color: "from-amber-100 to-amber-50" },
-  { name: "Ayurveda",        icon: "🪴", desc: "Ancient wisdom",            color: "from-emerald-100 to-emerald-50" },
-  { name: "Essential Oils",  icon: "💧", desc: "Pure & aromatic",           color: "from-teal-100 to-teal-50" },
+  { name: "Herbal Products", icon: "🌿", desc: "Roots, leaves & extracts" },
+  { name: "Organic Foods",   icon: "🥗", desc: "Wholesome & pure" },
+  { name: "Skincare",        icon: "✨", desc: "Natural glow, zero harm" },
+  { name: "Herbal Tea",      icon: "🍵", desc: "Calm & energize" },
+  { name: "Ayurveda",        icon: "🪴", desc: "Ancient wisdom" },
+  { name: "Essential Oils",  icon: "💧", desc: "Pure & aromatic" },
 ];
 
 const Categories = ({ onNavigate }) => (
-  <section className="py-20 lg:py-28 bg-white">
+  <section className="py-20 lg:py-28 bg-bg border-t border-gold/10">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <FadeUp className="text-center mb-14">
-        <span className="inline-block text-sm font-bold text-emerald-600 tracking-widest uppercase mb-3">Browse by Category</span>
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-stone-800 tracking-tight">What Are You Looking For?</h2>
-        <p className="mt-4 text-stone-400 text-lg max-w-xl mx-auto">
-          From ancient Ayurveda to modern organic foods — find everything in one place.
+        <span className="inline-block text-xs font-sans font-bold text-gold tracking-widest uppercase mb-3">Browse by Category</span>
+        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-white tracking-tight">Curated Apothecary Collections</h2>
+        <p className="mt-4 text-gold-dim font-sans text-sm max-w-xl mx-auto">
+          From ancient Ayurvedic remedies to handcrafted organic superfoods — explore our clinical grades.
         </p>
       </FadeUp>
 
       <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-        {categories.map(({ name, icon, desc, color }) => (
+        {categories.map(({ name, icon, desc }) => (
           <StaggerItem key={name}>
-            {/* NAVIGATION: clicking a category goes to the shop page */}
             <motion.div
               onClick={() => onNavigate("shop")}
-              whileHover={{ y: -8, boxShadow: "0 20px 40px rgba(0,0,0,0.08)" }}
-              whileTap={{ scale: 0.97 }}
-              className={`relative cursor-pointer rounded-2xl bg-gradient-to-br ${color} border border-white p-5 flex flex-col items-center text-center gap-3 overflow-hidden group`}
+              whileHover={{ y: -6, borderColor: "rgba(201, 168, 76, 0.5)", boxShadow: "0 12px 30px rgba(201,168,76,0.06)" }}
+              whileTap={{ scale: 0.98 }}
+              className="relative cursor-pointer rounded-[2px] bg-surface border border-gold/10 p-6 flex flex-col items-center text-center gap-3 transition-all duration-300 group"
             >
-              <motion.div
-                whileHover={{ scale: 1.15, rotate: 5 }}
-                className="w-14 h-14 rounded-xl bg-white/80 flex items-center justify-center text-3xl shadow-sm"
-              >
-                {icon}
-              </motion.div>
+              {/* Top corner accent */}
+              <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-gold/20 group-hover:border-gold/50 transition-colors" />
+              <span className="text-3xl">{icon}</span>
               <div>
-                <div className="font-bold text-stone-700 text-sm leading-tight">{name}</div>
-                <div className="text-xs text-stone-400 mt-0.5">{desc}</div>
+                <p className="font-serif text-sm text-[#F5F0E8]/80 group-hover:text-gold transition-colors">{name}</p>
+                <p className="text-[10px] text-[#F5F0E8]/30 mt-0.5 tracking-wide font-sans">{desc}</p>
               </div>
-              <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-all duration-300 rounded-2xl" />
             </motion.div>
           </StaggerItem>
         ))}
@@ -467,31 +332,29 @@ const Categories = ({ onNavigate }) => (
   </section>
 );
 
-// ─── 4. FEATURED PRODUCTS ────────────────────────────────────────────────────
-
+/* ── Tag colors ── */
 const tagColors = {
-  Bestseller: "bg-amber-100 text-amber-700",
-  New:        "bg-blue-100 text-blue-700",
-  "Top Rated":"bg-green-100 text-green-700",
-  Premium:    "bg-purple-100 text-purple-700",
-  Sale:       "bg-red-100 text-red-700",
+  Bestseller: "bg-surface-light text-gold border border-gold/25",
+  New:        "bg-surface-light text-gold border border-gold/25",
+  "Top Rated":"bg-surface-light text-gold border border-gold/25",
+  Premium:    "bg-surface-light text-gold border border-gold/25",
+  Sale:       "bg-surface-light text-gold border border-gold/25",
 };
 
 const Stars = ({ rating }) => (
   <div className="flex items-center gap-0.5">
     {[1, 2, 3, 4, 5].map((s) => (
-      <span key={s} className={`text-xs ${s <= Math.round(rating) ? "text-amber-400" : "text-stone-200"}`}>★</span>
+      <span key={s} className={`text-xs ${s <= Math.round(rating) ? "text-gold" : "text-gold/20"}`}>★</span>
     ))}
-    <span className="text-xs text-stone-400 ml-1 font-medium">{rating}</span>
+    <span className="text-[10px] text-gold-dim ml-1.5 font-sans font-semibold tracking-wider">{rating}</span>
   </div>
 );
 
-// NAVIGATION: ProductCard accepts onNavigate + onViewProduct to open product detail
 const ProductCard = ({ product, onNavigate, onViewProduct }) => {
   const [added, setAdded] = useState(false);
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
-  const wished = isInWishlist(product.id);
+  const wished = isInWishlist(product._id || product.id);
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
@@ -502,68 +365,84 @@ const ProductCard = ({ product, onNavigate, onViewProduct }) => {
 
   return (
     <motion.div
-      whileHover={{ y: -8, boxShadow: "0 24px 48px rgba(0,0,0,0.13)" }}
-      className="relative bg-white rounded-2xl border border-stone-100 overflow-hidden group cursor-pointer"
+      onClick={() => onViewProduct && onViewProduct(product)}
+      whileHover={{ 
+        y: -6, 
+        scale: 1.02,
+        borderColor: "rgba(201, 168, 76, 0.6)",
+        boxShadow: "0 8px 40px rgba(201,168,76,0.15)"
+      }}
+      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+      className="relative bg-surface rounded-[2px] border border-gold/10 overflow-hidden group cursor-pointer flex flex-col justify-between h-[390px]"
     >
       {product.tag && (
-        <div className={`absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide ${tagColors[product.tag] || ""}`}>
+        <div className={`absolute top-3 left-3 z-10 px-2 py-0.5 rounded-sm text-[9px] font-sans font-bold tracking-widest uppercase ${tagColors[product.tag] || ""}`}>
           {product.tag}
         </div>
       )}
 
-      {/* NAVIGATION: clicking the image goes to product details */}
-      <div className="relative overflow-hidden" onClick={() => onViewProduct && onViewProduct(product)}>
-        <motion.div whileHover={{ scale: 1.06 }} transition={{ duration: 0.4 }}>
+      {/* Image Container with Hover Zoom */}
+      <div className="relative aspect-square w-full overflow-hidden bg-bg border-b border-gold/10">
+        <motion.div 
+          className="w-full h-full"
+          whileHover={{ scale: 1.08 }} 
+          transition={{ duration: 0.4, ease: "easeOut" }}
+        >
           <img
             src={product.image}
             alt={product.name}
-            className="w-full h-44 object-cover"
+            className="w-full h-full object-cover"
             onError={(e) => {
               e.currentTarget.style.display = "none";
               if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = "flex";
             }}
           />
-          <div className="w-full h-44 flex-col items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 text-green-400" style={{ display: "none" }}>
+          <div className="w-full h-full flex flex-col items-center justify-center bg-surface-light text-gold" style={{ display: "none" }}>
             <span className="text-4xl">{product.icon}</span>
-            <span className="text-xs mt-1 opacity-60 font-semibold">{product.name}</span>
+            <span className="text-[10px] mt-1 opacity-60 font-semibold tracking-wider uppercase">{product.name}</span>
           </div>
         </motion.div>
 
+        {/* Favorite Icon */}
         <motion.button
-          whileHover={{ scale: 1.2 }}
+          whileHover={{ scale: 1.15 }}
           whileTap={{ scale: 0.9 }}
           onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }}
-          className={`absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-xl flex items-center justify-center shadow-md transition-colors ${wished ? "text-red-500" : "text-stone-400 hover:text-red-400"}`}
+          className="absolute top-3 right-3 w-8 h-8 rounded-sm bg-surface-light border border-gold/10 hover:border-gold/30 flex items-center justify-center text-xs shadow-md transition-colors"
         >
-          {wished ? "♥" : "♡"}
+          <span className={wished ? "text-gold" : "text-gold-dim"}>{wished ? "❤️" : "♡"}</span>
         </motion.button>
       </div>
 
-      <div className="p-4">
-        {/* NAVIGATION: clicking name also goes to product details */}
-        <h3
-          onClick={() => onViewProduct && onViewProduct(product)}
-          className="font-bold text-stone-800 text-sm leading-tight mb-1 hover:text-green-700 transition-colors"
-        >
-          {product.name}
-        </h3>
-        <Stars rating={product.rating} />
-        <span className="text-xs text-stone-400">({product.reviews} reviews)</span>
+      {/* Content */}
+      <div className="p-4 flex-1 flex flex-col justify-between">
+        <div>
+          <span className="text-[11px] font-accent italic text-gold-dim tracking-wider uppercase block mb-1">
+            {product.category || "Organic Formula"}
+          </span>
+          <h3 className="font-serif font-bold text-gold text-base leading-snug line-clamp-2 hover:text-gold-light transition-colors duration-200">
+            {product.name}
+          </h3>
+          <div className="mt-2">
+            <Stars rating={product.rating} />
+          </div>
+        </div>
 
-        <div className="flex items-center justify-between mt-3">
-          <div className="text-xl font-extrabold text-green-700">₹{product.price}</div>
-          <motion.button
-            whileHover={{ scale: 1.06 }}
-            whileTap={{ scale: 0.92 }}
-            onClick={handleAddToCart}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
-              added
-                ? "bg-green-100 text-green-700"
-                : "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-200/60"
-            }`}
-          >
-            {added ? "✓ Added!" : "+ Cart"}
-          </motion.button>
+        <div className="mt-4 pt-3 border-t border-gold/10">
+          <div className="flex items-center justify-between">
+            <span className="text-base font-sans font-bold text-gold">₹{product.price}</span>
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              onClick={handleAddToCart}
+              className={`px-4 py-2 rounded-[2px] text-[10px] font-sans font-bold tracking-widest uppercase transition-all duration-300 ${
+                added
+                  ? "bg-forest/20 border border-forest text-green-300"
+                  : "bg-gradient-to-r from-gold via-gold-light to-gold text-bg shadow-md shimmer-btn-glow force-text-white"
+              }`}
+            >
+              {added ? "✓ Added" : "+ Cart"}
+            </motion.button>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -575,49 +454,48 @@ const FeaturedProducts = ({ onNavigate, onViewProduct }) => {
   const products = liveProducts.length > 0 ? liveProducts.slice(0, 8) : ALL_PRODUCTS.slice(0, 8);
 
   return (
-  <section
-    className="py-20 lg:py-28 relative"
-    style={{
-      backgroundImage: "url('/images/featured-bg.jpg')",
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-      backgroundAttachment: "fixed",
-      backgroundRepeat: "no-repeat",
-    }}
-  >
-    <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.65) 0%, rgba(240,253,244,0.7) 50%, rgba(255,255,255,0.65) 100%)" }} />
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-      <FadeUp className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-12">
-        <div>
-          <span className="inline-block text-sm font-bold text-emerald-600 tracking-widest uppercase mb-2">Hand-Picked For You</span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-stone-800 tracking-tight">Featured Products</h2>
-        </div>
-        {/* NAVIGATION: View All → goes to shop page */}
-        <motion.button
-          onClick={() => onNavigate("shop")}
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.96 }}
-          className="flex-shrink-0 px-6 py-2.5 rounded-xl border-2 border-green-200 text-green-700 font-bold text-sm hover:bg-green-50 transition-colors"
-        >
-          View All →
-        </motion.button>
-      </FadeUp>
+    <section
+      className="py-20 lg:py-28 relative bg-bg dark-section"
+      style={{
+        backgroundImage: "url('/images/featured-bg.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, rgba(13,13,11,0.98) 0%, rgba(20,20,16,0.96) 50%, rgba(13,13,11,0.98) 100%)" }} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <FadeUp className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-12">
+          <div>
+            <span className="inline-block text-xs font-sans font-bold text-gold tracking-widest uppercase mb-2">Botanical Apothecary Favorites</span>
+            <h2 className="text-3xl sm:text-4xl font-serif font-bold text-white tracking-tight">Featured Formulations</h2>
+          </div>
+          <motion.button
+            onClick={() => onNavigate("shop")}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            className="flex-shrink-0 px-6 py-2.5 rounded-[2px] border border-white/40 text-white hover:border-white hover:bg-white/10 font-sans font-bold text-xs uppercase tracking-widest transition-colors duration-200"
+          >
+            View All formulations →
+          </motion.button>
+        </FadeUp>
 
-      {products.length === 0 ? (
-        <div className="flex items-center justify-center h-48">
-          <div className="w-8 h-8 border-2 border-green-300 border-t-green-600 rounded-full animate-spin" />
-        </div>
-      ) : (
-        <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-          {products.map((p) => (
-            <StaggerItem key={p._id || p.id}>
-              <ProductCard product={p} onNavigate={onNavigate} onViewProduct={onViewProduct} />
-            </StaggerItem>
-          ))}
-        </StaggerContainer>
-      )}
-    </div>
-  </section>
+        {products.length === 0 ? (
+          <div className="flex items-center justify-center h-48">
+            <div className="w-8 h-8 border border-gold/30 border-t-gold rounded-full animate-spin" />
+          </div>
+        ) : (
+          <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+            {products.map((p) => (
+              <StaggerItem key={p._id || p.id}>
+                <ProductCard product={p} onNavigate={onNavigate} onViewProduct={onViewProduct} />
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
+        )}
+      </div>
+    </section>
   );
 };
 
@@ -637,50 +515,49 @@ const AIBanner = ({ onNavigate }) => {
   };
 
   return (
-    <section className="py-20 lg:py-24 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-green-900 via-emerald-800 to-teal-900" />
-      <motion.div animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.25, 0.15] }} transition={{ duration: 6, repeat: Infinity }}
-        className="absolute top-0 left-0 w-96 h-96 rounded-full bg-green-400 blur-3xl -translate-x-1/2 -translate-y-1/2" />
-      <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }} transition={{ duration: 8, repeat: Infinity, delay: 2 }}
-        className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-emerald-300 blur-3xl translate-x-1/2 translate-y-1/2" />
-      <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+    <section className="py-20 lg:py-24 relative overflow-hidden bg-bg border-t border-gold/10">
+      <div className="absolute inset-0 bg-gradient-to-br from-bg via-surface to-bg" />
+      <motion.div animate={{ scale: [1, 1.15, 1], opacity: [0.05, 0.1, 0.05] }} transition={{ duration: 6, repeat: Infinity }}
+        className="absolute top-0 left-0 w-96 h-96 rounded-full bg-gold blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.03, 0.08, 0.03] }} transition={{ duration: 8, repeat: Infinity, delay: 2 }}
+        className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-gold-light blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none" />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
         <FadeUp>
-          <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-3xl">
+          <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+            className="w-14 h-14 mx-auto mb-6 rounded-md bg-surface border border-gold/20 flex items-center justify-center text-2xl shadow-lg">
             🤖
           </motion.div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-4">
-            Not Sure What to Buy?<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-300">Let AI Guide You</span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-white tracking-tight mb-4">
+            Not Sure What to Choose?<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-light to-gold">Let Bespoke AI Guide You</span>
           </h2>
-          <p className="text-green-200 text-lg mb-10 max-w-lg mx-auto">
-            Describe your health concern and our AI will recommend the best organic products tailored just for you.
+          <p className="text-gold-dim font-sans text-sm mb-10 max-w-lg mx-auto">
+            Describe your current health concern or wellness goal, and our apothecary AI will recommend premium formulations tailored for you.
           </p>
         </FadeUp>
 
         <FadeUp delay={0.15}>
-          <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 sm:p-8 shadow-2xl">
+          <div className="bg-surface border border-gold/20 rounded-[2px] p-6 sm:p-8 shadow-2xl">
             <div className="flex flex-col sm:flex-row gap-3">
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSuggest()}
-                placeholder="e.g. low energy, stress, dry skin, digestion..."
-                className="flex-1 px-5 py-4 rounded-xl bg-white/15 border border-white/20 text-white placeholder-white/40 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-400/60 backdrop-blur-sm"
+                placeholder="Describe what you are looking for (e.g., stress, glow, immunity, energy)..."
+                className="flex-1 px-5 py-4 rounded-[2px] bg-bg border border-gold/15 text-white placeholder-gold-dim/40 text-sm focus:outline-none focus:border-gold transition-colors duration-200"
               />
               <motion.button
-                whileHover={{ scale: 1.04, boxShadow: "0 0 32px rgba(52,211,153,0.5)" }}
-                whileTap={{ scale: 0.96 }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={handleSuggest}
                 disabled={loading}
-                className="px-8 py-4 bg-gradient-to-r from-green-400 to-emerald-400 hover:from-green-300 hover:to-emerald-300 text-green-900 font-extrabold text-sm rounded-xl shadow-lg transition-all duration-200 whitespace-nowrap disabled:opacity-70"
+                className="px-8 py-4 bg-gradient-to-r from-gold via-gold-light to-gold text-bg font-sans font-bold tracking-widest text-xs uppercase rounded-[2px] shadow-lg disabled:opacity-75 whitespace-nowrap shimmer-btn-glow"
               >
                 {loading ? (
                   <span className="flex items-center gap-2">
                     <motion.span animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-                      className="block w-4 h-4 border-2 border-green-900/30 border-t-green-900 rounded-full" />
+                      className="block w-4 h-4 border-2 border-bg/30 border-t-bg rounded-full" />
                     Analysing...
                   </span>
                 ) : "✨ Get Suggestions"}
@@ -690,19 +567,20 @@ const AIBanner = ({ onNavigate }) => {
             <AnimatePresence>
               {result && (
                 <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="mt-5 p-4 bg-green-400/10 border border-green-400/30 rounded-xl text-green-100 text-sm leading-relaxed text-left"
+                  className="mt-5 p-5 bg-surface-light border border-gold/20 rounded-[2px] text-white text-sm leading-relaxed text-left flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
                 >
-                  <span className="font-bold text-green-300">🌿 AI Recommendation: </span>
-                  {result}
-                  {/* NAVIGATION: Try Full AI page button */}
+                  <div>
+                    <span className="font-serif font-bold text-gold block mb-1">🌿 Botanical Recommendation:</span>
+                    <span className="text-gold-dim">{result}</span>
+                  </div>
                   <button
                     onClick={() => onNavigate("ai")}
-                    className="ml-3 px-3 py-1 bg-green-400/20 border border-green-400/40 text-green-300 text-xs font-bold rounded-lg hover:bg-green-400/30 transition-colors"
+                    className="flex-shrink-0 px-3 py-1.5 border border-gold/30 hover:border-gold text-gold text-xs font-sans font-bold tracking-widest uppercase rounded-[2px] transition-colors"
                   >
-                    Full AI Page →
+                    Bespoke Desk →
                   </button>
                 </motion.div>
               )}
@@ -716,32 +594,32 @@ const AIBanner = ({ onNavigate }) => {
 
 // ─── 6. WHY CHOOSE US ─────────────────────────────────────────────────────────
 const features = [
-  { icon: "🌿", title: "100% Organic",    desc: "All products are certified organic, grown without pesticides or synthetic chemicals." },
-  { icon: "🚫", title: "No Chemicals",    desc: "We guarantee zero harmful additives — what you see is what nature provides." },
-  { icon: "⚡", title: "Fast Delivery",   desc: "Same-day or next-day dispatch from our verified warehouses across India." },
-  { icon: "🏆", title: "Trusted Quality", desc: "FSSAI certified and AYUSH approved products with verified lab testing." },
+  { icon: "🌿", title: "100% Organic",    desc: "USDA & India Organic certified formulas, free from synthetic pesticides." },
+  { icon: "🚫", title: "Zero Harmful Additives",    desc: "Strictly pure and unrefined. No binders, fillers, or artificial colors." },
+  { icon: "⚡", title: "Expedited Courier",   desc: "Hand-packaged at our botanical centers and shipped directly to your door." },
+  { icon: "🏆", title: "Certified Clinical Grade", desc: "Formulations tested by third-party laboratories for safety and potency." },
 ];
 
 const WhyUs = () => (
-  <section className="py-20 lg:py-28 bg-white">
+  <section className="py-20 lg:py-28 bg-bg border-t border-gold/10">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <FadeUp className="text-center mb-14">
-        <span className="inline-block text-sm font-bold text-emerald-600 tracking-widest uppercase mb-3">Our Promise</span>
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-stone-800 tracking-tight">Why Choose NatureKart?</h2>
+        <span className="inline-block text-xs font-sans font-bold text-gold tracking-widest uppercase mb-3">Our Standards</span>
+        <h2 className="text-3xl sm:text-4xl font-serif font-bold text-white tracking-tight">Pure, Handcrafted Excellence</h2>
       </FadeUp>
       <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {features.map(({ icon, title, desc }) => (
           <StaggerItem key={title}>
             <motion.div
-              whileHover={{ y: -6, boxShadow: "0 20px 40px rgba(16,185,129,0.12)" }}
-              className="bg-gradient-to-br from-stone-50 to-white border border-stone-100 rounded-2xl p-7 text-center group cursor-default"
+              whileHover={{ y: -6, borderColor: "rgba(201, 168, 76, 0.4)", boxShadow: "0 10px 30px rgba(201,168,76,0.05)" }}
+              className="bg-surface border border-gold/10 rounded-[2px] p-8 text-center group transition-all duration-300"
             >
-              <motion.div whileHover={{ scale: 1.15, rotate: -5 }}
-                className="w-14 h-14 mx-auto mb-5 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl flex items-center justify-center text-3xl">
+              <motion.div whileHover={{ scale: 1.1, rotate: -3 }}
+                className="w-12 h-12 mx-auto mb-5 bg-surface-light border border-gold/10 rounded-sm flex items-center justify-center text-2xl group-hover:border-gold/30">
                 {icon}
               </motion.div>
-              <h3 className="font-extrabold text-stone-800 mb-2 text-base">{title}</h3>
-              <p className="text-stone-400 text-sm leading-relaxed">{desc}</p>
+              <h3 className="font-serif font-bold text-white mb-2 text-base">{title}</h3>
+              <p className="text-gold-dim text-xs leading-relaxed font-sans">{desc}</p>
             </motion.div>
           </StaggerItem>
         ))}
@@ -752,9 +630,9 @@ const WhyUs = () => (
 
 // ─── 7. TESTIMONIALS ──────────────────────────────────────────────────────────
 const testimonials = [
-  { name: "Priya Sharma",    location: "Mumbai",    rating: 5, role: "Yoga Instructor",  text: "NatureKart completely changed my morning routine. The Ashwagandha powder is authentic and I can genuinely feel the difference in my energy levels!" },
-  { name: "Rajan Mehta",     location: "Bangalore", rating: 5, role: "Software Engineer", text: "The AI suggestion feature recommended Triphala for my digestion issues and it has been a game-changer. Amazing product quality and super fast delivery." },
-  { name: "Ananya Krishnan", location: "Chennai",   rating: 5, role: "Nutritionist",      text: "I love that everything is certified organic. No more worrying about chemicals in my skincare. The Rose Hip oil is absolutely gorgeous!" },
+  { name: "Priya Sharma",    location: "Mumbai",    rating: 5, role: "Yoga Instructor",  text: "NatureKart completely changed my morning routine. The Ashwagandha powder is incredibly authentic and I feel an amazing difference in my daily energy levels!" },
+  { name: "Rajan Mehta",     location: "Bangalore", rating: 5, role: "Software Engineer", text: "The AI suggestion feature recommended Triphala for my digestion issues and it has been a game-changer. Exquisite product quality." },
+  { name: "Ananya Krishnan", location: "Chennai",   rating: 5, role: "Nutritionist",      text: "I love that everything is certified organic. No more worrying about synthetic chemicals. The Rose Hip oil is absolutely gorgeous!" },
 ];
 
 const Testimonials = () => {
@@ -765,11 +643,11 @@ const Testimonials = () => {
   }, []);
 
   return (
-    <section className="py-20 lg:py-28 bg-gradient-to-b from-stone-50 to-white overflow-hidden">
+    <section className="py-20 lg:py-28 bg-bg border-t border-gold/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <FadeUp className="text-center mb-14">
-          <span className="inline-block text-sm font-bold text-emerald-600 tracking-widest uppercase mb-3">Real Reviews</span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-stone-800 tracking-tight">What Our Customers Say</h2>
+          <span className="inline-block text-xs font-sans font-bold text-gold tracking-widest uppercase mb-3">Apothecary Patrons</span>
+          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-white tracking-tight">Verified Experiences</h2>
         </FadeUp>
 
         <div className="grid md:grid-cols-3 gap-6">
@@ -780,20 +658,21 @@ const Testimonials = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.15, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              whileHover={{ y: -6, boxShadow: "0 20px 40px rgba(0,0,0,0.08)" }}
-              className={`relative bg-white rounded-2xl border-2 p-7 cursor-default transition-all duration-300 ${active === i ? "border-green-300 shadow-xl shadow-green-100/60" : "border-stone-100"}`}
+              whileHover={{ y: -6 }}
               onClick={() => setActive(i)}
+              className={`relative bg-surface rounded-[2px] border p-8 cursor-pointer transition-all duration-300 ${active === i ? "border-gold" : "border-gold/10"}`}
             >
-              {active === i && <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-green-50/60 to-transparent pointer-events-none" />}
               <div className="flex gap-0.5 mb-4">
-                {Array.from({ length: t.rating }).map((_, j) => <span key={j} className="text-amber-400 text-sm">★</span>)}
+                {Array.from({ length: t.rating }).map((_, j) => <span key={j} className="text-gold text-xs">★</span>)}
               </div>
-              <p className="text-stone-600 text-sm leading-relaxed mb-6 italic">"{t.text}"</p>
+              <p className="text-gold-dim font-accent italic text-sm leading-relaxed mb-6">"{t.text}"</p>
               <div className="flex items-center gap-3">
-                <ImgPlaceholder className="w-11 h-11 flex-shrink-0 !rounded-full" label="" icon="👤" />
+                <div className="w-10 h-10 bg-surface-light border border-gold/10 rounded-full flex items-center justify-center font-bold text-gold text-xs font-sans">
+                  {t.name[0]}
+                </div>
                 <div>
-                  <div className="font-bold text-stone-800 text-sm">{t.name}</div>
-                  <div className="text-xs text-stone-400">{t.role} · {t.location}</div>
+                  <div className="font-serif font-bold text-white text-xs">{t.name}</div>
+                  <div className="text-[10px] text-gold-dim font-sans uppercase tracking-wider">{t.role} · {t.location}</div>
                 </div>
               </div>
             </motion.div>
@@ -803,7 +682,7 @@ const Testimonials = () => {
         <div className="flex justify-center gap-2 mt-8">
           {testimonials.map((_, i) => (
             <button key={i} onClick={() => setActive(i)}
-              className={`h-2 rounded-full transition-all duration-300 ${active === i ? "w-8 bg-green-500" : "w-2 bg-stone-200"}`} />
+              className={`h-1 transition-all duration-300 ${active === i ? "w-8 bg-gold" : "w-2 bg-gold/20"}`} />
           ))}
         </div>
       </div>
@@ -817,15 +696,15 @@ const Newsletter = () => {
   const [done, setDone]   = useState(false);
 
   return (
-    <section className="py-16 lg:py-20 bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 relative overflow-hidden">
-      <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
+    <section className="py-20 bg-surface border-t border-gold/10 relative overflow-hidden">
+      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, #C9A84C 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
       <div className="max-w-2xl mx-auto px-4 text-center relative z-10">
         <FadeUp>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-3">Stay Healthy, Stay Informed 🌿</h2>
-          <p className="text-green-100 text-base mb-8">Get weekly health tips, exclusive offers, and new product launches in your inbox.</p>
+          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-white mb-3">Join The Apothecary Circle</h2>
+          <p className="text-gold-dim font-sans text-sm mb-8">Receive handpicked wellness recommendations, botanical guides, and exclusive releases.</p>
           {done ? (
-            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="py-5 text-white font-bold text-lg">
-              ✅ You're subscribed! Welcome to the NatureKart family.
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="py-5 text-gold font-bold text-sm uppercase tracking-widest font-sans">
+              ✓ Subscribed to the Apothecary Circle. Welcome.
             </motion.div>
           ) : (
             <div className="flex flex-col sm:flex-row gap-3">
@@ -833,83 +712,26 @@ const Newsletter = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email address"
-                className="flex-1 px-5 py-4 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/50 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-white/50 backdrop-blur-sm"
+                className="flex-1 px-5 py-4 rounded-[2px] bg-bg border border-gold/15 text-white placeholder-gold-dim/40 text-sm focus:outline-none focus:border-gold transition-colors duration-200"
               />
               <motion.button
-                whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 onClick={() => email && setDone(true)}
-                className="px-8 py-4 bg-white text-green-700 font-extrabold text-sm rounded-xl shadow-lg hover:bg-green-50 transition-colors whitespace-nowrap"
+                className="px-8 py-4 bg-gradient-to-r from-gold via-gold-light to-gold text-bg font-sans font-bold tracking-widest text-xs uppercase rounded-[2px] shadow-lg whitespace-nowrap shimmer-btn-glow"
               >
-                Subscribe →
+                Subscribe
               </motion.button>
             </div>
           )}
-          <p className="text-green-200 text-xs mt-4">No spam, ever. Unsubscribe anytime.</p>
         </FadeUp>
       </div>
     </section>
   );
 };
 
-// ─── 9. FOOTER ───────────────────────────────────────────────────────────────
-const Footer = ({ onNavigate }) => (
-  <footer className="bg-stone-900 text-stone-400 pt-16 pb-8">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
-        <div className="col-span-2 md:col-span-1">
-          <button onClick={() => onNavigate("home")} className="flex items-center gap-2 mb-4">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-              <span className="text-white text-lg">🌿</span>
-            </div>
-            <span className="text-xl font-bold text-white">Nature<span className="text-emerald-400">Kart</span></span>
-          </button>
-          <p className="text-sm leading-relaxed mb-5">India's premier AI-powered organic marketplace. Nature's best, delivered to your doorstep.</p>
-          <div className="flex gap-3">
-            {["𝕏", "f", "in", "▶"].map((s) => (
-              <motion.a key={s} href="#" whileHover={{ scale: 1.15, color: "#34d399" }}
-                className="w-9 h-9 bg-stone-800 rounded-xl flex items-center justify-center text-sm text-stone-400 hover:bg-stone-700 transition-colors">
-                {s}
-              </motion.a>
-            ))}
-          </div>
-        </div>
-
-        {[
-          { title: "Shop",    links: [["Herbal Products","shop"],["Organic Foods","shop"],["Skincare","shop"],["Herbal Tea","shop"],["Ayurveda","shop"]] },
-          { title: "Company", links: [["About Us","home"],["Careers","home"],["Press","home"],["Blog","home"],["Contact","home"]] },
-          { title: "Support", links: [["Track Order","home"],["Returns","home"],["FAQ","home"],["Privacy Policy","home"],["Terms","home"]] },
-        ].map(({ title, links }) => (
-          <div key={title}>
-            <h4 className="text-white font-bold mb-4 text-sm tracking-wide">{title}</h4>
-            <ul className="space-y-2.5">
-              {links.map(([label, page]) => (
-                <li key={label}>
-                  <button onClick={() => onNavigate(page)} className="text-sm hover:text-emerald-400 transition-colors">{label}</button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-
-      <div className="border-t border-stone-800 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
-        <span>© {new Date().getFullYear()} NatureKart. All rights reserved.</span>
-        <div className="flex items-center gap-3">
-          <span className="px-3 py-1 bg-stone-800 rounded-lg">🔒 SSL Secured</span>
-          <span className="px-3 py-1 bg-stone-800 rounded-lg">✅ FSSAI Certified</span>
-          <span className="px-3 py-1 bg-stone-800 rounded-lg">🌿 100% Organic</span>
-        </div>
-      </div>
-    </div>
-  </footer>
-);
-
-// ─── HOME PAGE EXPORT ─────────────────────────────────────────────────────────
-// onNavigate(page) — "home" | "shop" | "product" | "ai"
-// onViewProduct(product) — called when user clicks a product card
 export default function NatureKartHome({ onNavigate, onViewProduct }) {
   return (
-    <div className="font-sans antialiased bg-white">
+    <div className="font-sans antialiased bg-bg">
       <Navbar />
       <Hero onNavigate={onNavigate} />
       <Categories onNavigate={onNavigate} />
@@ -918,7 +740,7 @@ export default function NatureKartHome({ onNavigate, onViewProduct }) {
       <WhyUs />
       <Testimonials />
       <Newsletter />
-      <Footer onNavigate={onNavigate} />
+      <Footer />
     </div>
   );
 }

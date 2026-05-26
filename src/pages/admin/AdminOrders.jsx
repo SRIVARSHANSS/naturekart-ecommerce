@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
 import AdminLayout from './AdminLayout.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
-
-const API = 'http://localhost:5001/api';
+import { adminGetOrders, adminUpdateOrder, sendDeliveryOtp, verifyDeliveryOtp } from '../../services/api.js';
 
 const ALL_STATUSES = [
   'Placed', 'Processing', 'Packed', 'Shipped', 'Out for Delivery',
@@ -100,7 +98,7 @@ function OtpModal({ title, subtitle, onSendOtp, onVerify, onClose, sending, veri
 }
 
 /* ── Order Detail Drawer ─────────────────────────────────────────────────── */
-function OrderDrawer({ order, onClose, onStatusChange, onSendDeliveryOtp, onVerifyDeliveryOtp, headers }) {
+function OrderDrawer({ order, onClose, onStatusChange, onSendDeliveryOtp, onVerifyDeliveryOtp }) {
   const [status,      setStatus]      = useState(order.status);
   const [saving,      setSaving]      = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -271,7 +269,6 @@ function OrderDrawer({ order, onClose, onStatusChange, onSendDeliveryOtp, onVeri
 
 /* ── Main ─────────────────────────────────────────────────────────────────── */
 export default function AdminOrders() {
-  const { token } = useAuth();
   const [orders,       setOrders]       = useState([]);
   const [loading,      setLoading]      = useState(true);
   const [selected,     setSelected]     = useState(null);
@@ -279,28 +276,26 @@ export default function AdminOrders() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [toast,        setToast]        = useState('');
 
-  const headers = { Authorization: `Bearer ${token}` };
-
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
 
   const fetchOrders = () =>
-    axios.get(`${API}/admin/orders`, { headers }).then(r => setOrders(r.data)).finally(() => setLoading(false));
+    adminGetOrders().then(data => setOrders(data)).finally(() => setLoading(false));
 
   useEffect(() => { fetchOrders(); }, []);
 
   const handleStatusChange = async (id, status) => {
-    await axios.put(`${API}/admin/orders/${id}`, { status }, { headers });
+    await adminUpdateOrder(id, { status });
     setOrders(prev => prev.map(o => o._id === id ? { ...o, status } : o));
     showToast(`Order status updated to "${status}"`);
   };
 
   const handleSendDeliveryOtp = async (orderId) => {
-    await axios.post(`${API}/orders/send-delivery-otp`, { orderId }, { headers });
+    await sendDeliveryOtp({ orderId });
     showToast('Delivery OTP sent to customer email!');
   };
 
   const handleVerifyDeliveryOtp = async (orderId, otp) => {
-    await axios.post(`${API}/orders/verify-delivery-otp`, { orderId, otp }, { headers });
+    await verifyDeliveryOtp({ orderId, otp });
     await fetchOrders();
     showToast('✅ OTP verified — Order marked as Delivered!');
   };
@@ -328,7 +323,6 @@ export default function AdminOrders() {
         {selected && (
           <OrderDrawer
             order={selected}
-            headers={headers}
             onClose={() => setSelected(null)}
             onStatusChange={handleStatusChange}
             onSendDeliveryOtp={handleSendDeliveryOtp}

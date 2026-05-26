@@ -4,6 +4,7 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { getProducts } from '../services/api.js';
+import { ALL_PRODUCTS as STATIC_PRODUCTS } from '../data/products.js';
 
 export function useProducts() {
   const [products, setProducts] = useState([]);
@@ -15,10 +16,14 @@ export function useProducts() {
     setError(null);
     try {
       const data = await getProducts();
-      /* Normalise: backend uses _id, frontend uses id */
-      setProducts(data.map(p => ({ ...p, id: p._id })));
+      if (data && data.length > 0) {
+        setProducts(data.map(p => ({ ...p, id: p._id })));
+      } else {
+        setProducts(STATIC_PRODUCTS);
+      }
     } catch (e) {
       setError(e.message || 'Failed to load products');
+      setProducts(STATIC_PRODUCTS);
     } finally {
       setLoading(false);
     }
