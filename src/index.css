@@ -455,4 +455,33 @@ input::placeholder, textarea::placeholder {
   color: #FFFFFF !important;
 }
 
+/* ── Card / Box Background: Soft Sage Green #D9E3DB ── */
+/* Applies to: feature boxes (About), product cards (Related Formulations),
+   story boxes, review cards, certification cards, trust badges, etc. */
+.bg-surface {
+  background-color: #D9E3DB !important;
+}
+.bg-surface-light {
+  background-color: #D9E3DB !important;
+}
+
+/* Translucent surface variants */
+.bg-surface\/90 {
+  background-color: rgba(217, 227, 219, 0.9) !important;
+}
+.bg-surface-light\/90 {
+  background-color: rgba(217, 227, 219, 0.9) !important;
+}
+.bg-surface-light\/95 {
+  background-color: rgba(217, 227, 219, 0.95) !important;
+}
+
+/* AI Suggestion / Search input container box */
+input:not(#search-container input),
+textarea,
+select {
+  background-color: #D9E3DB !important;
+  color: #1B3626 !important;
+}
+
 
