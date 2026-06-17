@@ -77,7 +77,7 @@ const WishlistCard = ({ item, index }) => {
         borderColor: "rgba(201, 168, 76, 0.6)",
         boxShadow: "0 8px 40px rgba(201,168,76,0.15)"
       }}
-      className="relative bg-surface rounded-[2px] border border-gold/10 overflow-hidden group flex flex-col justify-between h-[420px]">
+      className="relative bg-bigbox rounded-[2px] border border-gold/10 overflow-hidden group flex flex-col justify-between h-[420px]">
 
       {/* Image */}
       <div className="relative aspect-square w-full overflow-hidden bg-bg border-b border-gold/10">
@@ -158,7 +158,7 @@ export default function WishlistPage() {
       <Navbar />
 
       {/* Hero strip */}
-      <div className="relative border-b border-gold/10 bg-surface overflow-hidden">
+      <div className="relative border-b border-gold/10 bg-bigbox overflow-hidden">
         <LeafDecor />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 pt-28">
           <p className="text-gold/60 text-xs tracking-[0.3em] uppercase font-sans mb-2 italic">
@@ -200,7 +200,7 @@ export default function WishlistPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             className="text-center py-28 relative">
             <div className="relative inline-block mb-8">
-              <div className="w-28 h-28 rounded-sm border border-gold/20 bg-surface flex items-center justify-center mx-auto">
+              <div className="w-28 h-28 rounded-sm border border-gold/20 bg-bigbox flex items-center justify-center mx-auto">
                 <span className="text-5xl opacity-30 select-none">❤️</span>
               </div>
               <div className="absolute -top-1 -right-1 w-3 h-3 border border-gold/40 bg-bg" />

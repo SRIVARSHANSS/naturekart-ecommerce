@@ -70,7 +70,7 @@ const ProductCard = ({ product, index = 0, onViewProduct }) => {
         borderColor: "rgba(201, 168, 76, 0.6)",
         boxShadow: "0 8px 40px rgba(201,168,76,0.15)"
       }}
-      className="relative bg-surface rounded-[2px] border border-gold/10 overflow-hidden group cursor-pointer flex flex-col justify-between h-[420px]"
+      className="relative bg-bigbox rounded-[2px] border border-gold/10 overflow-hidden group cursor-pointer flex flex-col justify-between h-[420px]"
     >
       {/* Tag badge */}
       {product.tag && (
@@ -166,7 +166,7 @@ const Sidebar = ({ selectedCat, setSelectedCat, priceRange, setPriceRange, minRa
       className="w-64 flex-shrink-0 space-y-6"
     >
       {/* Categories */}
-      <div className="bg-surface rounded-[2px] border border-gold/10 p-5 shadow-lg">
+      <div className="bg-bigbox rounded-[2px] border border-gold/10 p-5 shadow-lg">
         <h3 className="font-sans font-bold text-gold text-xs mb-4 tracking-widest uppercase">CATEGORIES</h3>
         <div className="space-y-1">
           {CATEGORIES.map((cat) => (
@@ -188,7 +188,7 @@ const Sidebar = ({ selectedCat, setSelectedCat, priceRange, setPriceRange, minRa
       </div>
 
       {/* Price Range */}
-      <div className="bg-surface rounded-[2px] border border-gold/10 p-5 shadow-lg">
+      <div className="bg-bigbox rounded-[2px] border border-gold/10 p-5 shadow-lg">
         <h3 className="font-sans font-bold text-gold text-xs mb-4 tracking-widest uppercase">PRICE RANGE</h3>
         <div className="space-y-3">
           <input type="range" min={100} max={1000} step={10} value={priceRange}
@@ -203,7 +203,7 @@ const Sidebar = ({ selectedCat, setSelectedCat, priceRange, setPriceRange, minRa
       </div>
 
       {/* Rating Filter */}
-      <div className="bg-surface rounded-[2px] border border-gold/10 p-5 shadow-lg">
+      <div className="bg-bigbox rounded-[2px] border border-gold/10 p-5 shadow-lg">
         <h3 className="font-sans font-bold text-gold text-xs mb-4 tracking-widest uppercase">MIN RATING</h3>
         <div className="space-y-2">
           {[4.5, 4, 3.5, 0].map((r) => (
@@ -229,7 +229,7 @@ const Sidebar = ({ selectedCat, setSelectedCat, priceRange, setPriceRange, minRa
       </div>
 
       {/* Availability */}
-      <div className="bg-surface rounded-[2px] border border-gold/10 p-5 shadow-lg">
+      <div className="bg-bigbox rounded-[2px] border border-gold/10 p-5 shadow-lg">
         <h3 className="font-sans font-bold text-gold text-xs mb-4 tracking-widest uppercase">AVAILABILITY</h3>
         <label className="flex items-center gap-3 cursor-pointer group">
           <div
@@ -435,24 +435,26 @@ export default function ProductListing({ onNavigate, onViewProduct }) {
       <Navbar />
 
       {/* Hero Banner - Video Background */}
-      <div className="pt-16 relative min-h-[320px] flex items-center overflow-hidden">
+      <div className="pt-16 relative min-h-[320px] flex items-center overflow-hidden dark-section">
         <video
           autoPlay loop muted playsInline preload="auto"
           className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          style={{ zIndex: 0 }}
         >
           <source src="/videos/hero-bg.mp4" type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-gradient-to-r from-bg/95 via-bg/75 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-transparent" />
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="relative z-10 w-full text-center px-4 py-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold/10 border border-gold/20 rounded-sm mb-4">
-            <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-            <span className="text-gold-light text-[10px] font-sans font-bold tracking-widest uppercase">Premium Apothecary Formulation</span>
+        {/* Dark overlay */}
+        <div className="absolute inset-0" style={{ zIndex: 1, background: 'rgba(13,13,11,0.58)' }} />
+        <div className="absolute inset-0" style={{ zIndex: 1, background: 'linear-gradient(to top, rgba(13,13,11,0.65) 0%, transparent 65%)' }} />
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="relative w-full text-center px-4 py-16" style={{ zIndex: 2 }}>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-sm mb-4 backdrop-blur-sm" style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.28)' }}>
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#C9A84C' }} />
+            <span className="text-[10px] font-sans font-bold tracking-widest uppercase" style={{ color: '#ffffff' }}>Premium Apothecary Formulation</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-serif font-bold text-white tracking-tight mb-3">
-            Shop Our <span className="font-accent italic text-gold">Organic Collection</span>
+          <h1 className="text-3xl sm:text-5xl font-serif font-bold tracking-tight mb-3" style={{ color: '#ffffff', textShadow: '0 2px 28px rgba(0,0,0,0.8)' }}>
+            Shop Our <span style={{ color: '#C9A84C', fontStyle: 'italic' }}>Organic Collection</span>
           </h1>
-          <p className="text-gold-dim text-sm max-w-xl mx-auto font-sans leading-relaxed">Pure, natural, and ethically sourced formulations for your health, skin, and botanical wellness journey.</p>
+          <p className="text-sm max-w-xl mx-auto font-sans leading-relaxed" style={{ color: 'rgba(255,255,255,0.90)', textShadow: '0 1px 12px rgba(0,0,0,0.7)' }}>Pure, natural, and ethically sourced formulations for your health, skin, and botanical wellness journey.</p>
         </motion.div>
       </div>
 

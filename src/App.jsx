@@ -49,6 +49,9 @@ function App() {
   const location  = useLocation();
   const [loading, setLoading]   = useState(false);
 
+  // Don't show website UI on admin pages
+  const isAdminPage = location.pathname.startsWith('/admin');
+
   /* Scroll to top on route change */
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -73,9 +76,10 @@ function App() {
 
   return (
     <>
-      <Loader show={loading} />
-      <CartPopup />
-      <AIFloatingWidget />
+      {/* Only show website-level UI on non-admin pages */}
+      {!isAdminPage && <Loader show={loading} />}
+      {!isAdminPage && <CartPopup />}
+      {!isAdminPage && <AIFloatingWidget />}
 
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>

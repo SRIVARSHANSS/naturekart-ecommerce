@@ -325,7 +325,7 @@ export default function CheckoutPage() {
                   <p className="text-[10px] tracking-[0.3em] uppercase text-gold/50 mb-1">Step 01</p>
                   <h2 className="font-serif text-2xl text-[#F5F0E8]">Delivery Address</h2>
                 </div>
-                <form onSubmit={handleAddressNext} className="bg-surface border border-gold/10 p-6 space-y-5 relative">
+                <form onSubmit={handleAddressNext} className="bg-bigbox border border-gold/10 p-6 space-y-5 relative">
                   {/* corner accents */}
                   <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-gold/30 pointer-events-none" />
                   <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-gold/30 pointer-events-none" />
@@ -363,7 +363,7 @@ export default function CheckoutPage() {
                       className={`w-full text-left p-5 border transition-all duration-200 relative
                         ${selectedDelivery?.id === opt.id
                           ? 'border-gold/60 bg-gold/5 shadow-[0_0_20px_rgba(201,168,76,0.08)]'
-                          : 'border-gold/10 bg-surface hover:border-gold/25'}`}
+                          : 'border-gold/10 bg-bigbox hover:border-gold/25'}`}
                     >
                       {/* selected indicator corner */}
                       {selectedDelivery?.id === opt.id && (
@@ -406,7 +406,7 @@ export default function CheckoutPage() {
                   <p className="text-[10px] tracking-[0.3em] uppercase text-gold/50 mb-1">Step 03</p>
                   <h2 className="font-serif text-2xl text-[#F5F0E8]">Secure Payment</h2>
                 </div>
-                <div className="bg-surface border border-gold/10 p-6 relative">
+                <div className="bg-bigbox border border-gold/10 p-6 relative">
                   <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-gold/30 pointer-events-none" />
                   <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-gold/30 pointer-events-none" />
 
@@ -498,7 +498,7 @@ export default function CheckoutPage() {
           {/* ── Right: Order Summary ── */}
           <div>
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              className="bg-surface border border-gold/10 p-5 sticky top-28 relative overflow-hidden">
+              className="bg-bigbox border border-gold/10 p-5 sticky top-28 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-gold/30 pointer-events-none" />
               <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-gold/30 pointer-events-none" />
 

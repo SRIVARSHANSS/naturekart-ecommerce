@@ -126,7 +126,7 @@ export default function OrderConfirmation() {
               ],
             }}
             transition={{ duration: 2.5, repeat: Infinity }}
-            className="inline-flex items-center justify-center w-28 h-28 border border-gold/20 bg-surface mb-8"
+            className="inline-flex items-center justify-center w-28 h-28 border border-gold/20 bg-bigbox mb-8"
           >
             <AnimatedCheck />
           </motion.div>
@@ -166,7 +166,7 @@ export default function OrderConfirmation() {
           initial={{ y: 24, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.7 }}
-          className="bg-surface border border-gold/15 p-6 mb-6 relative"
+          className="bg-bigbox border border-gold/15 p-6 mb-6 relative"
         >
           {/* corner accents */}
           <div className="absolute top-0 left-0 w-5 h-5 border-t border-l border-gold/40 pointer-events-none" />

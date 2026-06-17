@@ -54,7 +54,9 @@ export default function Navbar() {
       ]
     : baseLinks;
 
-  const isDarkBg = location.pathname === '/' && !scrolled;
+  // Pages that have a dark/video hero background — navbar should be white
+  const darkHeroPages = ['/', '/shop', '/about', '/contact'];
+  const isDarkBg = darkHeroPages.includes(location.pathname) && !scrolled;
 
   return (
     <motion.nav
@@ -257,13 +259,13 @@ export default function Navbar() {
               <div className="flex gap-4">
                 <button
                   onClick={() => { navigate('/wishlist'); setMenuOpen(false); }}
-                  className="flex-1 py-3 border border-gold/20 bg-surface text-gold font-sans font-bold tracking-widest text-xs uppercase rounded-[2px]"
+                  className="flex-1 py-3 border border-gold/20 bg-bigbox text-gold font-sans font-bold tracking-widest text-xs uppercase rounded-[2px]"
                 >
                   ❤️ Wishlist ({wishlist.length})
                 </button>
                 <button
                   onClick={() => { navigate('/cart'); setMenuOpen(false); }}
-                  className="flex-1 py-3 border border-gold/20 bg-surface text-gold font-sans font-bold tracking-widest text-xs uppercase rounded-[2px]"
+                  className="flex-1 py-3 border border-gold/20 bg-bigbox text-gold font-sans font-bold tracking-widest text-xs uppercase rounded-[2px]"
                 >
                   🛒 Cart ({cartCount})
                 </button>

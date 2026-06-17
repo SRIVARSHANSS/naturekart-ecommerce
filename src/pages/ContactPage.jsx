@@ -123,6 +123,14 @@ export default function ContactPage() {
 
       {/* ── HERO ── */}
       <section className="relative min-h-[55vh] flex items-center justify-center overflow-hidden pt-20">
+        {/* Background Image - clear and fully visible */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center pointer-events-none" 
+          style={{ backgroundImage: "url('/images/contact_hero_bg.png')", opacity: 1 }} 
+        />
+        {/* Light dark overlay to keep text readable */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(13,13,11,0.35) 0%, rgba(13,13,11,0.25) 60%, rgba(13,13,11,0.45) 100%)' }} />
+
         <div className="absolute inset-0 opacity-[0.03]"
           style={{ backgroundImage: 'linear-gradient(#C9A84C 1px,transparent 1px),linear-gradient(90deg,#C9A84C 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-gold/4 blur-3xl pointer-events-none" />
@@ -165,7 +173,7 @@ export default function ContactPage() {
 
           {/* Contact Form */}
           <FadeUp>
-            <div className="bg-surface border border-gold/15 p-8 relative">
+            <div className="bg-bigbox border border-gold/15 p-8 relative">
               <div className="absolute top-0 left-0 w-5 h-5 border-t border-l border-gold/40 pointer-events-none" />
               <div className="absolute top-0 right-0 w-5 h-5 border-t border-r border-gold/40 pointer-events-none" />
               <div className="absolute bottom-0 left-0 w-5 h-5 border-b border-l border-gold/40 pointer-events-none" />
@@ -263,7 +271,7 @@ export default function ContactPage() {
 
             {/* Hours */}
             <FadeUp delay={0.1}>
-              <div className="border border-gold/10 bg-surface p-5 relative">
+              <div className="border border-gold/10 bg-bigbox p-5 relative">
                 <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-gold/25" />
                 <p className="text-[10px] tracking-[0.2em] uppercase text-gold/40 mb-4">Business Hours</p>
                 {[['Mon – Sat', '9:00 AM – 6:00 PM', true], ['Sunday', 'Closed', false]].map(([day, time, open]) => (
@@ -302,7 +310,7 @@ export default function ContactPage() {
       {/* ── Location Strip ── */}
       <section className="max-w-6xl mx-auto px-6 pb-20">
         <FadeUp>
-          <div className="relative border border-gold/10 bg-surface overflow-hidden h-52 flex flex-col items-center justify-center">
+          <div className="relative border border-gold/10 bg-bigbox overflow-hidden h-52 flex flex-col items-center justify-center">
             {/* background grid */}
             <div className="absolute inset-0 opacity-[0.03]"
               style={{ backgroundImage: 'linear-gradient(#C9A84C 1px,transparent 1px),linear-gradient(90deg,#C9A84C 1px,transparent 1px)', backgroundSize: '40px 40px' }} />

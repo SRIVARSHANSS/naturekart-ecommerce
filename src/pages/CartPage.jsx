@@ -38,7 +38,7 @@ const CartPage = () => {
       <Navbar />
 
       {/* Hero strip */}
-      <div className="relative border-b border-gold/10 bg-surface overflow-hidden">
+      <div className="relative border-b border-gold/10 bg-bigbox overflow-hidden">
         <LeafDecor />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 pt-28">
           <p className="text-gold/60 text-xs tracking-[0.3em] uppercase font-sans mb-2 italic">
@@ -66,7 +66,7 @@ const CartPage = () => {
             className="text-center py-28 relative"
           >
             <div className="relative inline-block mb-8">
-              <div className="w-28 h-28 rounded-sm border border-gold/20 bg-surface flex items-center justify-center mx-auto">
+              <div className="w-28 h-28 rounded-sm border border-gold/20 bg-bigbox flex items-center justify-center mx-auto">
                 <svg width="48" height="48" viewBox="0 0 48 48" fill="none" className="opacity-30">
                   <path d="M6 6h4l6 24h20l4-16H14" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   <circle cx="20" cy="36" r="2" stroke="#C9A84C" strokeWidth="1.5"/>
@@ -216,7 +216,7 @@ const CartPage = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-surface border border-gold/15 p-6 sticky top-28 relative overflow-hidden"
+                className="bg-bigbox border border-gold/15 p-6 sticky top-28 relative overflow-hidden"
               >
                 {/* corner accents */}
                 <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-gold/40" />

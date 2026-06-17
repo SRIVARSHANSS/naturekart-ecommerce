@@ -76,6 +76,14 @@ export default function AboutPage() {
 
       {/* ── HERO ── */}
       <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden pt-20">
+        {/* Background Image - clear and fully visible */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center pointer-events-none" 
+          style={{ backgroundImage: "url('/images/about_hero_bg.png')", opacity: 1 }} 
+        />
+        {/* Light dark overlay to keep text readable */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(13,13,11,0.35) 0%, rgba(13,13,11,0.25) 60%, rgba(13,13,11,0.45) 100%)' }} />
+
         {/* background texture lines */}
         <div className="absolute inset-0 opacity-[0.03]"
           style={{ backgroundImage: 'linear-gradient(#C9A84C 1px,transparent 1px),linear-gradient(90deg,#C9A84C 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
@@ -151,7 +159,7 @@ export default function AboutPage() {
           <FadeUp delay={0.15}>
             <div className="relative">
               {/* Decorative frame */}
-              <div className="border border-gold/15 p-8 bg-surface relative">
+              <div className="border border-gold/15 p-8 bg-bigbox relative">
                 <div className="absolute top-0 left-0 w-5 h-5 border-t border-l border-gold/50" />
                 <div className="absolute top-0 right-0 w-5 h-5 border-t border-r border-gold/50" />
                 <div className="absolute bottom-0 left-0 w-5 h-5 border-b border-l border-gold/50" />
@@ -183,7 +191,7 @@ export default function AboutPage() {
       </section>
 
       {/* ── MISSION & VISION ── */}
-      <section className="py-20 border-y border-gold/8 bg-surface relative overflow-hidden">
+      <section className="py-20 border-y border-gold/8 bg-bigbox relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.02]"
           style={{ backgroundImage: 'linear-gradient(#C9A84C 1px,transparent 1px),linear-gradient(90deg,#C9A84C 1px,transparent 1px)', backgroundSize: '80px 80px' }} />
         <div className="max-w-5xl mx-auto px-6 relative z-10">
@@ -241,7 +249,7 @@ export default function AboutPage() {
             {STATS.map(({ value, suffix, label }, i) => (
               <FadeUp key={label} delay={i * 0.1}>
                 <motion.div whileHover={{ y: -4, borderColor: 'rgba(201,168,76,0.4)' }}
-                  className="border border-gold/10 bg-surface p-6 text-center transition-all duration-300 relative">
+                  className="border border-gold/10 bg-bigbox p-6 text-center transition-all duration-300 relative">
                   <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-gold/25" />
                   <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-gold/25" />
                   <p className="font-serif text-4xl text-gold mb-1">
@@ -266,7 +274,7 @@ export default function AboutPage() {
           {FEATURES.map(({ icon, title, desc }, i) => (
             <FadeUp key={title} delay={i * 0.07}>
               <motion.div whileHover={{ y: -6, borderColor: 'rgba(201,168,76,0.35)' }}
-                className="border border-gold/10 bg-surface p-7 relative group transition-all duration-300 cursor-default">
+                className="border border-gold/10 bg-bigbox p-7 relative group transition-all duration-300 cursor-default">
                 <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-gold/20 pointer-events-none" />
                 <div className="text-gold text-xl mb-5 font-serif">{icon}</div>
                 <h3 className="font-sans font-semibold text-[#F5F0E8] text-base mb-2">{title}</h3>
@@ -289,7 +297,7 @@ export default function AboutPage() {
             {TEAM.map(({ name, role, initial, bio }, i) => (
               <FadeUp key={name} delay={i * 0.12}>
                 <motion.div whileHover={{ y: -6, borderColor: 'rgba(201,168,76,0.4)' }}
-                  className="border border-gold/10 bg-surface p-8 text-center relative transition-all duration-300">
+                  className="border border-gold/10 bg-bigbox p-8 text-center relative transition-all duration-300">
                   <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-gold/25" />
                   <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-gold/25" />
                   <div className="w-16 h-16 border border-gold/30 bg-gold/5 flex items-center justify-center mx-auto mb-6">
@@ -307,7 +315,7 @@ export default function AboutPage() {
 
       {/* ── CTA ── */}
       <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-surface" />
+        <div className="absolute inset-0 bg-bigbox" />
         <div className="absolute inset-0 opacity-[0.03]"
           style={{ backgroundImage: 'linear-gradient(#C9A84C 1px,transparent 1px),linear-gradient(90deg,#C9A84C 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
         <motion.div

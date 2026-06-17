@@ -34,14 +34,14 @@ const Stars = ({ rating, size = "sm" }) => (
 import { ALL_PRODUCTS as BASE_PRODUCTS } from "../data/products.js";
 
 const DETAILED_OVERRIDES = {
-  1: { images: ["/images/Ashwagandha Powder.png", "/images/Triphala Churna.png", "/images/Moringa Leaf Extract.png"], qty: 60, unit: "grams", benefits: ["Reduces stress & anxiety by 44%", "Improves strength & endurance", "Supports healthy thyroid function", "Enhances cognitive function & memory", "Boosts testosterone & male vitality"], ingredients: ["KSM-66 Ashwagandha Root Extract 500mg", "Black Pepper Extract (Piperine) 5mg", "Organic Rice Flour (filler)", "Vegetable Capsule Shell"], usage: ["Take 1–2 capsules daily after meals", "Best taken with warm milk or water", "Use consistently for 8–12 weeks for optimal results", "Avoid if pregnant or breastfeeding"], aiReason: "Ashwagandha is a top adaptogen for stress, low energy, and hormonal balance. Based on your interest in wellness, this root extract directly targets cortisol regulation while supporting adrenal health — making it ideal for modern high-stress lifestyles.", aiTags: ["Stress Relief", "Energy Boost", "Hormonal Balance", "Adaptogen"] },
-  2: { images: ["/images/Turmeric Gold Capsules.png", "/images/Moringa Leaf Extract.png", "/images/Ashwagandha Powder.png"], qty: 60, unit: "capsules", benefits: ["Powerful anti-inflammatory action", "Supports joint health & mobility", "Rich in antioxidants", "Aids digestion & gut health", "Supports healthy liver function"], ingredients: ["Turmeric Root Extract (95% curcuminoids) 500mg", "BioPerine® Black Pepper 5mg", "Ginger Root Extract 50mg", "Vegetable Capsule"], usage: ["Take 2 capsules daily with meals", "Pair with a healthy fat for best absorption", "Consistent use for 4+ weeks recommended"], aiReason: "Curcumin in turmeric is one of the most researched anti-inflammatory compounds. It's ideal for joint pain, gut inflammation, and oxidative stress — combined with BioPerine® for superior bioavailability.", aiTags: ["Anti-Inflammatory", "Joint Health", "Antioxidant", "Gut Health"] },
-  3: { images: ["/images/Moringa Leaf Extract.png", "/images/Ashwagandha Powder.png", "/images/Turmeric Gold Capsules.png"], qty: 100, unit: "grams", benefits: ["92+ essential nutrients in one dose", "Rich in iron — fights anaemia", "Powerful detoxification support", "Supports healthy blood sugar", "Complete plant-based protein source"], ingredients: ["Organic Moringa Oleifera Leaf Powder 100%", "No additives, fillers, or preservatives"], usage: ["Add 1 tsp to smoothies, juices or warm water", "Mix into yoghurt or oatmeal", "Start with half teaspoon and build up gradually"], aiReason: "Moringa is the most nutrient-dense plant on Earth. For anyone focused on nutrition, immunity, or iron intake — moringa delivers more vitamin C than oranges, more calcium than milk, and more protein than eggs per gram.", aiTags: ["Superfood", "Iron Rich", "Immunity", "Detox"] },
-  4: { images: ["/images/Neem Face Wash.png", "/images/Rose Hip Face Oil.png", "/images/Moringa Leaf Extract.png"], qty: 100, unit: "ml", benefits: ["Fights acne & pimple-causing bacteria", "Unclogs pores and removes excess oil", "Anti-bacterial & anti-fungal properties", "Suitable for sensitive skin", "Reduces blackheads & whiteheads"], ingredients: ["Neem Leaf Extract", "Tea Tree Essential Oil", "Aloe Vera Gel", "Glycerin", "Vitamin E", "Aqua"], usage: ["Apply to wet face & neck", "Massage gently in circular motions for 60 seconds", "Rinse thoroughly with lukewarm water", "Use twice daily for best results"], aiReason: "Neem has been used in Ayurveda for over 4000 years as a natural antibiotic for skin. Combined with tea tree oil, this face wash targets acne at the root — without the harsh dryness of chemical alternatives.", aiTags: ["Anti-Acne", "Pore Care", "Natural Cleanser", "Sensitive Skin"] },
-  5: { images: ["/images/Triphala Churna.png", "/images/Ashwagandha Powder.png", "/images/Moringa Leaf Extract.png"], qty: 100, unit: "grams", benefits: ["Gently relieves constipation", "Supports healthy gut microbiome", "Natural full-body detox", "Rich in vitamin C (Amalaki)", "Supports eye health"], ingredients: ["Amalaki (Emblica officinalis) 33.3%", "Bibhitaki (Terminalia bellirica) 33.3%", "Haritaki (Terminalia chebula) 33.3%"], usage: ["Mix 1 tsp in warm water at bedtime", "Or take with honey in the morning", "Start with a smaller dose and increase gradually", "Not recommended during pregnancy"], aiReason: "Triphala is a cornerstone Ayurvedic formula with clinical evidence supporting its use for IBS, constipation, and gut microbiome health. It gently cleanses without dependency — unlike conventional laxatives.", aiTags: ["Digestive Health", "Detox", "Gut Microbiome", "Ayurvedic"] },
-  6: { images: ["/images/Rose Hip Face Oil.png", "/images/Neem Face Wash.png", "/images/Moringa Leaf Extract.png"], qty: 30, unit: "ml", benefits: ["Reduces scars & stretch marks", "Fades hyperpigmentation & dark spots", "Deep hydration without greasiness", "Anti-ageing vitamin A & C rich", "Improves skin texture & elasticity"], ingredients: ["Rosa Canina (Rosehip) Seed Oil 100%", "Cold-pressed, unrefined, hexane-free"], usage: ["Apply 3–4 drops to clean face & neck", "Gently massage until absorbed", "Use morning and evening", "Can be layered under moisturiser"], aiReason: "Rosehip oil's natural trans-retinoic acid (vitamin A) is clinically proven to reduce fine lines and scars. It's a rare plant oil that combines anti-ageing, brightening, and hydrating benefits — without synthetic retinoids.", aiTags: ["Anti-Ageing", "Brightening", "Scar Reduction", "Luxury Skincare"] },
-  7: { images: ["/images/Tulsi Green Tea.png", "/images/Moringa Leaf Extract.png", "/images/Ashwagandha Powder.png"], qty: 25, unit: "bags", benefits: ["Strengthens immune system", "Reduces stress & mental fatigue", "Rich in antioxidants & polyphenols", "Supports respiratory health", "Light caffeine — no jitters"], ingredients: ["Organic Tulsi (Holy Basil) Leaves", "Organic Green Tea Leaves", "Natural Lemon Essence"], usage: ["Steep 1 bag in 200ml hot water (85°C) for 2–3 mins", "Do not over-brew to avoid bitterness", "Enjoy 2–3 cups daily", "Add honey or lemon to taste"], aiReason: "Tulsi is revered as the 'Queen of Herbs' in Ayurveda for its adaptogenic and antimicrobial properties. Combined with green tea's EGCG antioxidants, this blend delivers calm energy and immune support in every cup.", aiTags: ["Immunity", "Stress Relief", "Antioxidant", "Caffeine-Light"] },
-  8: { images: ["/images/Amla Hair Serum.png", "/images/Rose Hip Face Oil.png", "/images/Neem Face Wash.png"], qty: 50, unit: "ml", benefits: ["Reduces hair fall by up to 47%", "Stimulates new hair follicle growth", "Strengthens hair from the root", "Adds natural shine & lustre", "Nourishes dry, damaged scalp"], ingredients: ["Amla (Phyllanthus emblica) Extract", "Bhringraj Extract", "Redensyl® 3%", "Biotin", "Argan Oil", "Keratin Proteins"], usage: ["Apply 4–6 drops to scalp on damp hair", "Massage gently for 2 minutes", "Leave in — do not rinse", "Use daily for best results"], aiReason: "Amla has the highest natural vitamin C content of any fruit and is scientifically validated for hair growth. Paired with Redensyl® — a clinically proven alternative to minoxidil — this serum addresses hair thinning at the follicular level.", aiTags: ["Hair Growth", "Hair Fall", "Scalp Health", "Strengthening"] },
+  1: { images: ["/images/Ashwagandha Powder.png"], qty: 60, unit: "grams", benefits: ["Reduces stress & anxiety by 44%", "Improves strength & endurance", "Supports healthy thyroid function", "Enhances cognitive function & memory", "Boosts testosterone & male vitality"], ingredients: ["KSM-66 Ashwagandha Root Extract 500mg", "Black Pepper Extract (Piperine) 5mg", "Organic Rice Flour (filler)", "Vegetable Capsule Shell"], usage: ["Take 1–2 capsules daily after meals", "Best taken with warm milk or water", "Use consistently for 8–12 weeks for optimal results", "Avoid if pregnant or breastfeeding"], aiReason: "Ashwagandha is a top adaptogen for stress, low energy, and hormonal balance. Based on your interest in wellness, this root extract directly targets cortisol regulation while supporting adrenal health — making it ideal for modern high-stress lifestyles.", aiTags: ["Stress Relief", "Energy Boost", "Hormonal Balance", "Adaptogen"] },
+  2: { images: ["/images/Turmeric Gold Capsules.png"], qty: 60, unit: "capsules", benefits: ["Powerful anti-inflammatory action", "Supports joint health & mobility", "Rich in antioxidants", "Aids digestion & gut health", "Supports healthy liver function"], ingredients: ["Turmeric Root Extract (95% curcuminoids) 500mg", "BioPerine® Black Pepper 5mg", "Ginger Root Extract 50mg", "Vegetable Capsule"], usage: ["Take 2 capsules daily with meals", "Pair with a healthy fat for best absorption", "Consistent use for 4+ weeks recommended"], aiReason: "Curcumin in turmeric is one of the most researched anti-inflammatory compounds. It's ideal for joint pain, gut inflammation, and oxidative stress — combined with BioPerine® for superior bioavailability.", aiTags: ["Anti-Inflammatory", "Joint Health", "Antioxidant", "Gut Health"] },
+  3: { images: ["/images/Moringa Leaf Extract.png"], qty: 100, unit: "grams", benefits: ["92+ essential nutrients in one dose", "Rich in iron — fights anaemia", "Powerful detoxification support", "Supports healthy blood sugar", "Complete plant-based protein source"], ingredients: ["Organic Moringa Oleifera Leaf Powder 100%", "No additives, fillers, or preservatives"], usage: ["Add 1 tsp to smoothies, juices or warm water", "Mix into yoghurt or oatmeal", "Start with half teaspoon and build up gradually"], aiReason: "Moringa is the most nutrient-dense plant on Earth. For anyone focused on nutrition, immunity, or iron intake — moringa delivers more vitamin C than oranges, more calcium than milk, and more protein than eggs per gram.", aiTags: ["Superfood", "Iron Rich", "Immunity", "Detox"] },
+  4: { images: ["/images/Neem Face Wash.png"], qty: 100, unit: "ml", benefits: ["Fights acne & pimple-causing bacteria", "Unclogs pores and removes excess oil", "Anti-bacterial & anti-fungal properties", "Suitable for sensitive skin", "Reduces blackheads & whiteheads"], ingredients: ["Neem Leaf Extract", "Tea Tree Essential Oil", "Aloe Vera Gel", "Glycerin", "Vitamin E", "Aqua"], usage: ["Apply to wet face & neck", "Massage gently in circular motions for 60 seconds", "Rinse thoroughly with lukewarm water", "Use twice daily for best results"], aiReason: "Neem has been used in Ayurveda for over 4000 years as a natural antibiotic for skin. Combined with tea tree oil, this face wash targets acne at the root — without the harsh dryness of chemical alternatives.", aiTags: ["Anti-Acne", "Pore Care", "Natural Cleanser", "Sensitive Skin"] },
+  5: { images: ["/images/Triphala Churna.png"], qty: 100, unit: "grams", benefits: ["Gently relieves constipation", "Supports healthy gut microbiome", "Natural full-body detox", "Rich in vitamin C (Amalaki)", "Supports eye health"], ingredients: ["Amalaki (Emblica officinalis) 33.3%", "Bibhitaki (Terminalia bellirica) 33.3%", "Haritaki (Terminalia chebula) 33.3%"], usage: ["Mix 1 tsp in warm water at bedtime", "Or take with honey in the morning", "Start with a smaller dose and increase gradually", "Not recommended during pregnancy"], aiReason: "Triphala is a cornerstone Ayurvedic formula with clinical evidence supporting its use for IBS, constipation, and gut microbiome health. It gently cleanses without dependency — unlike conventional laxatives.", aiTags: ["Digestive Health", "Detox", "Gut Microbiome", "Ayurvedic"] },
+  6: { images: ["/images/Rose Hip Face Oil.png"], qty: 30, unit: "ml", benefits: ["Reduces scars & stretch marks", "Fades hyperpigmentation & dark spots", "Deep hydration without greasiness", "Anti-ageing vitamin A & C rich", "Improves skin texture & elasticity"], ingredients: ["Rosa Canina (Rosehip) Seed Oil 100%", "Cold-pressed, unrefined, hexane-free"], usage: ["Apply 3–4 drops to clean face & neck", "Gently massage until absorbed", "Use morning and evening", "Can be layered under moisturiser"], aiReason: "Rosehip oil's natural trans-retinoic acid (vitamin A) is clinically proven to reduce fine lines and scars. It's a rare plant oil that combines anti-ageing, brightening, and hydrating benefits — without synthetic retinoids.", aiTags: ["Anti-Ageing", "Brightening", "Scar Reduction", "Luxury Skincare"] },
+  7: { images: ["/images/Tulsi Green Tea.png"], qty: 25, unit: "bags", benefits: ["Strengthens immune system", "Reduces stress & mental fatigue", "Rich in antioxidants & polyphenols", "Supports respiratory health", "Light caffeine — no jitters"], ingredients: ["Organic Tulsi (Holy Basil) Leaves", "Organic Green Tea Leaves", "Natural Lemon Essence"], usage: ["Steep 1 bag in 200ml hot water (85°C) for 2–3 mins", "Do not over-brew to avoid bitterness", "Enjoy 2–3 cups daily", "Add honey or lemon to taste"], aiReason: "Tulsi is revered as the 'Queen of Herbs' in Ayurveda for its adaptogenic and antimicrobial properties. Combined with green tea's EGCG antioxidants, this blend delivers calm energy and immune support in every cup.", aiTags: ["Immunity", "Stress Relief", "Antioxidant", "Caffeine-Light"] },
+  8: { images: ["/images/Amla Hair Serum.png"], qty: 50, unit: "ml", benefits: ["Reduces hair fall by up to 47%", "Stimulates new hair follicle growth", "Strengthens hair from the root", "Adds natural shine & lustre", "Nourishes dry, damaged scalp"], ingredients: ["Amla (Phyllanthus emblica) Extract", "Bhringraj Extract", "Redensyl® 3%", "Biotin", "Argan Oil", "Keratin Proteins"], usage: ["Apply 4–6 drops to scalp on damp hair", "Massage gently for 2 minutes", "Leave in — do not rinse", "Use daily for best results"], aiReason: "Amla has the highest natural vitamin C content of any fruit and is scientifically validated for hair growth. Paired with Redensyl® — a clinically proven alternative to minoxidil — this serum addresses hair thinning at the follicular level.", aiTags: ["Hair Growth", "Hair Fall", "Scalp Health", "Strengthening"] },
 };
 
 const enrichProduct = (p) => {
@@ -53,7 +53,7 @@ const enrichProduct = (p) => {
   return {
     ...p,
     mrp: p.price + Math.round(p.price * 0.25),
-    images: [p.image, "/images/Moringa Leaf Extract.png", "/images/Ashwagandha Powder.png"],
+    images: [p.image],
     qty: 1,
     unit: "pack",
     benefits: ["100% natural and organic ingredients", "No artificial preservatives or fillers", "Sustainably and ethically sourced", "Carefully tested for purity and quality", "Supports overall well-being and health"],
@@ -83,68 +83,29 @@ const REVIEWS = [
 
 // ─── Image Gallery ─────────────────────────────────────────────────────────────
 const ImageGallery = ({ images, productName }) => {
-  const [activeIdx, setActiveIdx] = useState(0);
   const [zoomed, setZoomed] = useState(false);
+  const src = images?.[0];
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Main image */}
-      <motion.div
-        className="relative overflow-hidden rounded-sm bg-gradient-to-br from-surface to-surface-light border border-gold/15 aspect-square cursor-zoom-in"
-        onClick={() => setZoomed(!zoomed)}
-      >
-        <AnimatePresence mode="wait">
-          <motion.img
-            key={activeIdx}
-            src={images[activeIdx]}
-            alt={productName}
-            initial={{ opacity: 0, scale: 1.02 }}
-            animate={{ opacity: 1, scale: zoomed ? 1.15 : 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="w-full h-full object-cover"
-            onError={(e) => { e.currentTarget.style.display = "none"; }}
-          />
-        </AnimatePresence>
-
-        {/* Zoom hint */}
-        <div className="absolute bottom-3 right-3 px-2.5 py-1 bg-surface-light/90 border border-gold/20 text-gold text-[10px] font-sans font-bold tracking-widest uppercase rounded-sm opacity-0 group-hover:opacity-100 transition-opacity">
-          {zoomed ? "Click to zoom out" : "Click to zoom in"}
-        </div>
-
-        {/* Nav arrows */}
-        {images.length > 1 && (
-          <>
-            <motion.button onClick={(e) => { e.stopPropagation(); setActiveIdx((i) => (i - 1 + images.length) % images.length); }}
-              whileHover={{ scale: 1.1 }} className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-surface-light/95 hover:bg-surface/95 text-gold border border-gold/20 rounded-sm shadow-md flex items-center justify-center">
-              ←
-            </motion.button>
-            <motion.button onClick={(e) => { e.stopPropagation(); setActiveIdx((i) => (i + 1) % images.length); }}
-              whileHover={{ scale: 1.1 }} className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-surface-light/95 hover:bg-surface/95 text-gold border border-gold/20 rounded-sm shadow-md flex items-center justify-center">
-              →
-            </motion.button>
-          </>
-        )}
-      </motion.div>
-
-      {/* Thumbnails */}
-      <div className="flex gap-3">
-        {images.map((img, i) => (
-          <motion.button
-            key={i}
-            onClick={() => setActiveIdx(i)}
-            whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.95 }}
-            className={`relative w-20 h-20 rounded-sm overflow-hidden border transition-all flex-shrink-0 ${
-              activeIdx === i ? "border-gold shadow-md shadow-gold/10" : "border-gold/15 hover:border-gold/40"
-            }`}
-          >
-            <img src={img} alt={`View ${i + 1}`} className="w-full h-full object-cover"
-              onError={(e) => { e.currentTarget.style.opacity = "0.3"; }} />
-            {activeIdx === i && <div className="absolute inset-0 bg-gold/10" />}
-          </motion.button>
-        ))}
+    <motion.div
+      className="relative overflow-hidden rounded-sm bg-gradient-to-br from-surface to-surface-light border border-gold/15 aspect-square cursor-zoom-in group"
+      onClick={() => setZoomed(!zoomed)}
+      whileHover={{ scale: 1.01 }}
+      transition={{ duration: 0.3 }}
+    >
+      <motion.img
+        src={src}
+        alt={productName}
+        animate={{ scale: zoomed ? 1.18 : 1 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className="w-full h-full object-cover"
+        onError={(e) => { e.currentTarget.style.display = "none"; }}
+      />
+      {/* Zoom hint */}
+      <div className="absolute bottom-3 right-3 px-2.5 py-1 bg-surface-light/90 border border-gold/20 text-gold text-[10px] font-sans font-bold tracking-widest uppercase rounded-sm opacity-0 group-hover:opacity-100 transition-opacity">
+        {zoomed ? "Zoom Out" : "Zoom In"}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -155,10 +116,10 @@ const AIRecommendationBox = ({ product }) => (
       {/* Animated border */}
       <motion.div animate={{ opacity: [0.5, 0.8, 0.5] }} transition={{ duration: 3, repeat: Infinity }}
         className="absolute inset-0 rounded-sm bg-gradient-to-r from-gold/40 via-gold/10 to-gold/40 p-px">
-        <div className="w-full h-full rounded-sm bg-surface" />
+        <div className="w-full h-full rounded-sm bg-bigbox" />
       </motion.div>
 
-      <div className="relative bg-surface rounded-sm p-5 border border-gold/10">
+      <div className="relative bg-bigbox rounded-sm p-5 border border-gold/10">
         <div className="flex items-start gap-3 mb-3">
           <motion.div animate={{ rotate: [0, 6, -6, 0] }} transition={{ duration: 4, repeat: Infinity }}
             className="w-10 h-10 bg-gold/10 border border-gold/20 rounded-sm flex items-center justify-center text-lg flex-shrink-0">
@@ -193,7 +154,7 @@ const TabsSection = ({ product }) => {
   const tabIcons = ["✨", "🌿", "📋"];
 
   return (
-    <FadeUp delay={0.05} className="bg-surface rounded-sm border border-gold/10 shadow-lg overflow-hidden">
+    <FadeUp delay={0.05} className="bg-bigbox rounded-sm border border-gold/10 shadow-lg overflow-hidden">
       {/* Tab headers */}
       <div className="flex border-b border-gold/10 relative bg-surface-light">
         {TABS.map((tab, i) => (
@@ -214,7 +175,7 @@ const TabsSection = ({ product }) => {
       </div>
 
       {/* Tab content */}
-      <div className="p-6 bg-surface">
+      <div className="p-6 bg-bigbox">
         <AnimatePresence mode="wait">
           <motion.ul
             key={activeTab}
@@ -252,7 +213,7 @@ const ReviewsSection = ({ product }) => {
   const distValues = [68, 20, 8, 3, 1]; // %
 
   return (
-    <FadeUp className="bg-surface rounded-sm border border-gold/10 shadow-lg p-6">
+    <FadeUp className="bg-bigbox rounded-sm border border-gold/10 shadow-lg p-6">
       <h3 className="font-serif font-bold text-gold text-lg mb-6 tracking-wide">Customer Reviews</h3>
 
       {/* Rating summary */}
@@ -358,7 +319,7 @@ const RelatedProducts = ({ currentId, products = [], onViewProduct }) => {
             transition={{ delay: i * 0.06 }}
             whileHover={{ y: -6, borderColor: "rgba(201, 168, 76, 0.4)" }}
             onClick={() => onViewProduct(product)}
-            className="flex-shrink-0 w-52 bg-surface border border-gold/10 rounded-sm overflow-hidden cursor-pointer group flex flex-col justify-between"
+            className="flex-shrink-0 w-52 bg-bigbox border border-gold/10 rounded-sm overflow-hidden cursor-pointer group flex flex-col justify-between"
           >
             <div className="overflow-hidden h-36 relative bg-bg border-b border-gold/10">
               <motion.img whileHover={{ scale: 1.08 }} transition={{ duration: 0.35 }}

@@ -86,9 +86,9 @@ const WordAnim = ({ text }) => {
     }
   };
   return (
-    <motion.span variants={container} initial="hidden" animate="visible" className="inline-flex flex-wrap">
+    <motion.span variants={container} initial="hidden" animate="visible" className="inline-flex flex-wrap justify-center w-full">
       {text.split(" ").map((word, wordIdx) => (
-        <span key={wordIdx} className="whitespace-nowrap mr-3.5 inline-flex">
+        <span key={wordIdx} className="whitespace-nowrap mr-[0.3em] inline-flex">
           {Array.from(word).map((char, charIdx) => (
             <motion.span key={charIdx} variants={child} className="inline-block">
               {char}
@@ -124,29 +124,29 @@ const Hero = ({ onNavigate }) => {
   return (
     <section 
       onMouseMove={handleMouseMove}
-      className="relative min-h-screen flex items-center overflow-hidden pt-20 bg-bg dark-section"
+      className="relative min-h-screen flex items-center overflow-hidden pt-20 bg-[#0d0d0b] dark-section"
     >
       <video
         autoPlay loop muted playsInline preload="auto"
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
         style={{ zIndex: 0 }}
       >
-        <source src="/videos/hero-bg.mp4" type="video/mp4" />
+        <source src="/videos/8928705-uhd_3840_2160_25fps.mp4" type="video/mp4" />
       </video>
 
-      {/* Dark luxury bottom-to-top gradient mask */}
+      {/* Clearer luxury bottom-to-top gradient mask */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           zIndex: 1,
-          background: "linear-gradient(to top, rgba(13,13,11,0.98) 0%, rgba(13,13,11,0.7) 60%, rgba(13,13,11,0.2) 100%)",
+          background: "linear-gradient(to top, rgba(13,13,11,0.5) 0%, rgba(13,13,11,0.3) 60%, rgba(13,13,11,0.05) 100%)",
         }}
       />
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           zIndex: 2,
-          background: "radial-gradient(circle at center, transparent 30%, rgba(13,13,11,0.6) 100%)",
+          background: "radial-gradient(circle at center, transparent 40%, rgba(13,13,11,0.35) 100%)",
         }}
       />
 
@@ -177,10 +177,10 @@ const Hero = ({ onNavigate }) => {
       </motion.div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative" style={{ zIndex: 3 }}>
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center py-16 lg:py-24">
+        <div className="flex flex-col items-center justify-center text-center py-16 lg:py-24 max-w-3xl mx-auto">
 
-          {/* Text Side */}
-          <div className="text-left">
+          {/* Text Side Centered */}
+          <div className="flex flex-col items-center text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
@@ -191,12 +191,13 @@ const Hero = ({ onNavigate }) => {
             </motion.div>
 
             <h1
-              className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-serif font-bold text-white leading-[1.08] tracking-tight mb-6"
+              className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-serif font-bold text-white leading-[1.12] tracking-tight mb-6 text-center w-full"
               style={{ textShadow: "0 2px 24px rgba(0,0,0,0.5)" }}
             >
-              <WordAnim text="100% Natural & Organic" />
-              <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-light to-gold">
+              <span className="block w-full text-center">
+                <WordAnim text="100% Natural & Organic" />
+              </span>
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-light to-gold mt-1">
                 Products
               </span>
             </h1>
@@ -204,7 +205,7 @@ const Hero = ({ onNavigate }) => {
             <motion.p
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.5 }}
-              className="text-base text-gold-dim font-sans leading-relaxed mb-8 max-w-lg"
+              className="text-base text-gold-dim font-sans leading-relaxed mb-8 max-w-lg mx-auto"
             >
               Shop herbal, eco-friendly, and sustainable products — powered by bespoke AI recommendations tailored to your unique wellness goals.
             </motion.p>
@@ -212,7 +213,7 @@ const Hero = ({ onNavigate }) => {
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
-              className="flex flex-wrap gap-4 mb-10"
+              className="flex flex-wrap justify-center gap-4 mb-10"
             >
               <motion.button
                 onClick={() => onNavigate("shop")}
@@ -224,9 +225,9 @@ const Hero = ({ onNavigate }) => {
               </motion.button>
               <motion.button
                 onClick={() => onNavigate("shop")}
-                whileHover={{ scale: 1.03, backgroundColor: "rgba(201, 168, 76, 0.05)" }}
+                whileHover={{ scale: 1.03, backgroundColor: "rgba(255, 255, 255, 0.08)" }}
                 whileTap={{ scale: 0.97 }}
-                className="px-8 py-4 bg-transparent text-gold font-sans font-bold tracking-widest uppercase text-xs rounded-[2px] border border-gold/40 shadow-lg transition-colors"
+                className="px-8 py-4 bg-transparent text-white font-sans font-bold tracking-widest uppercase text-xs rounded-[2px] border border-white/30 hover:border-white shadow-lg transition-colors"
               >
                 Explore Products
               </motion.button>
@@ -235,42 +236,20 @@ const Hero = ({ onNavigate }) => {
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }}
               transition={{ delay: 0.75 }}
-              className="flex gap-8 border-t border-gold/10 pt-6"
+              className="flex justify-center gap-8 border-t border-gold/10 pt-6 w-full max-w-md mx-auto"
             >
               {[
                 { val: "500+", label: "Pure Formulas" },
                 { val: "12K+", label: "Patrons" },
                 { val: "100%", label: "Lab Verified" },
               ].map(({ val, label }) => (
-                <div key={label}>
+                <div key={label} className="text-center flex-1">
                   <div className="text-xl font-serif font-bold text-white">{val}</div>
                   <div className="text-[10px] text-gold-dim font-sans font-semibold tracking-wider uppercase mt-0.5">{label}</div>
                 </div>
               ))}
             </motion.div>
           </div>
-
-          {/* Image / Product Side */}
-          <motion.div
-            style={{ y }}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            className="relative flex justify-center items-center"
-          >
-            <div className="absolute w-72 h-72 bg-gold/10 rounded-full blur-3xl opacity-30" />
-            <motion.div
-              animate={{ y: [-12, 12, -12] }}
-              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              className="relative z-10"
-            >
-              <img
-                src="/images/hero-product.png"
-                alt="Hero Product"
-                className="w-72 md:w-80 lg:w-96 object-contain mx-auto drop-shadow-[0_30px_60px_rgba(201,168,76,0.15)]"
-              />
-            </motion.div>
-          </motion.div>
         </div>
       </div>
 
@@ -373,7 +352,7 @@ const ProductCard = ({ product, onNavigate, onViewProduct }) => {
         boxShadow: "0 8px 40px rgba(201,168,76,0.15)"
       }}
       transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      className="relative bg-surface rounded-[2px] border border-gold/10 overflow-hidden group cursor-pointer flex flex-col justify-between h-[390px]"
+      className="relative bg-bigbox rounded-[2px] border border-gold/10 overflow-hidden group cursor-pointer flex flex-col justify-between h-[390px]"
     >
       {product.tag && (
         <div className={`absolute top-3 left-3 z-10 px-2 py-0.5 rounded-sm text-[9px] font-sans font-bold tracking-widest uppercase ${tagColors[product.tag] || ""}`}>
@@ -538,7 +517,7 @@ const AIBanner = ({ onNavigate }) => {
         </FadeUp>
 
         <FadeUp delay={0.15}>
-          <div className="bg-surface border border-gold/20 rounded-[2px] p-6 sm:p-8 shadow-2xl">
+          <div className="bg-bigbox border border-gold/20 rounded-[2px] p-6 sm:p-8 shadow-2xl">
             <div className="flex flex-col sm:flex-row gap-3">
               <input
                 value={query}
@@ -612,7 +591,7 @@ const WhyUs = () => (
           <StaggerItem key={title}>
             <motion.div
               whileHover={{ y: -6, borderColor: "rgba(201, 168, 76, 0.4)", boxShadow: "0 10px 30px rgba(201,168,76,0.05)" }}
-              className="bg-surface border border-gold/10 rounded-[2px] p-8 text-center group transition-all duration-300"
+              className="bg-bigbox border border-gold/10 rounded-[2px] p-8 text-center group transition-all duration-300"
             >
               <motion.div whileHover={{ scale: 1.1, rotate: -3 }}
                 className="w-12 h-12 mx-auto mb-5 bg-surface-light border border-gold/10 rounded-sm flex items-center justify-center text-2xl group-hover:border-gold/30">
@@ -660,7 +639,7 @@ const Testimonials = () => {
               transition={{ delay: i * 0.15, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               whileHover={{ y: -6 }}
               onClick={() => setActive(i)}
-              className={`relative bg-surface rounded-[2px] border p-8 cursor-pointer transition-all duration-300 ${active === i ? "border-gold" : "border-gold/10"}`}
+              className={`relative bg-bigbox rounded-[2px] border p-8 cursor-pointer transition-all duration-300 ${active === i ? "border-gold" : "border-gold/10"}`}
             >
               <div className="flex gap-0.5 mb-4">
                 {Array.from({ length: t.rating }).map((_, j) => <span key={j} className="text-gold text-xs">★</span>)}
@@ -696,7 +675,7 @@ const Newsletter = () => {
   const [done, setDone]   = useState(false);
 
   return (
-    <section className="py-20 bg-surface border-t border-gold/10 relative overflow-hidden">
+    <section className="py-20 bg-bigbox border-t border-gold/10 relative overflow-hidden">
       <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, #C9A84C 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
       <div className="max-w-2xl mx-auto px-4 text-center relative z-10">
         <FadeUp>

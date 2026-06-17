@@ -510,11 +510,15 @@ textarea::placeholder {
 /* Applies to: feature boxes (About), product cards (Related Formulations),
    story boxes, review cards, certification cards, trust badges, etc. */
 .bg-surface {
-  background-color: #f1fbf3 !important;
+  background-color: rgba(217, 227, 219, 0.9) !important;
 }
 
 .bg-surface-light {
   background-color: rgba(217, 227, 219, 0.9) !important;
+}
+
+.bg-bigbox {
+  background-color: #f1fbf3 !important;
 }
 
 /* Translucent surface variants */

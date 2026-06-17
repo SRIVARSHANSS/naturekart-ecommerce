@@ -226,7 +226,7 @@ export default function OrderTrackingPage() {
 
         {/* Search box */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="bg-surface border border-gold/15 p-5 mb-6 relative">
+          className="bg-bigbox border border-gold/15 p-5 mb-6 relative">
           <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-gold/30 pointer-events-none" />
           <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-gold/30 pointer-events-none" />
           <p className="text-[10px] tracking-[0.2em] uppercase text-gold/40 mb-3">Enter Order ID</p>
@@ -258,7 +258,7 @@ export default function OrderTrackingPage() {
         {/* Not found */}
         {notFound && !loading && (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-            className="bg-surface border border-gold/10 p-12 text-center relative">
+            className="bg-bigbox border border-gold/10 p-12 text-center relative">
             <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-gold/25" />
             <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-gold/25" />
             <p className="text-gold text-3xl mb-4">◎</p>
@@ -300,7 +300,7 @@ export default function OrderTrackingPage() {
               </div>
 
               {/* Order meta */}
-              <div className="bg-surface border border-gold/10 p-5 grid sm:grid-cols-2 gap-4 relative">
+              <div className="bg-bigbox border border-gold/10 p-5 grid sm:grid-cols-2 gap-4 relative">
                 <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-gold/20" />
                 {[
                   { label: 'Order ID',      value: order.orderId },
@@ -325,7 +325,7 @@ export default function OrderTrackingPage() {
 
               {/* Items */}
               {order.items?.length > 0 && (
-                <div className="bg-surface border border-gold/10 p-5 relative">
+                <div className="bg-bigbox border border-gold/10 p-5 relative">
                   <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-gold/20" />
                   <p className="text-[10px] tracking-[0.2em] uppercase text-gold/40 mb-4">Items Ordered</p>
                   <div className="space-y-3">
@@ -354,7 +354,7 @@ export default function OrderTrackingPage() {
               )}
 
               {/* Timeline */}
-              <div className="bg-surface border border-gold/10 p-6 relative">
+              <div className="bg-bigbox border border-gold/10 p-6 relative">
                 <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-gold/25" />
                 <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-gold/25" />
                 <p className="text-[10px] tracking-[0.2em] uppercase text-gold/40 mb-6">
