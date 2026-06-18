@@ -3,10 +3,23 @@ const mongoose = require('mongoose');
 const cors     = require('cors');
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
+// Startup check for Razorpay live key mode in production
+if (process.env.NODE_ENV === 'production') {
+  const rzpKey = process.env.RAZORPAY_KEY_ID;
+  if (!rzpKey || !rzpKey.startsWith('rzp_live_')) {
+    console.warn('⚠️  WARNING: RAZORPAY_KEY_ID does not start with "rzp_live_" while running in production mode!');
+  }
+}
+
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+// Expose raw body buffer on req.rawBody for webhook signature verification
+app.use(express.json({
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  }
+}));
 
 /* ── DB ─────────────────────────────────────────────────────────────────────── */
 mongoose

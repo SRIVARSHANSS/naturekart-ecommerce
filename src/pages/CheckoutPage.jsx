@@ -188,9 +188,20 @@ export default function CheckoutPage() {
         amount:   total,
         currency: 'INR',
         notes:    { customerName: form.name, customerEmail: form.email },
+        orderData: {
+          items:        cartItems,
+          address:      form,
+          deliveryType: selectedDelivery.id,
+          shippingCost,
+          subtotal,
+          totalAmount:  total,
+          userId:       user?.id || user?._id || null,
+        },
       });
 
       const { keyId } = await getRazorpayKey();
+
+      const isMobilePhone = /Mobi|Android|iPhone/i.test(navigator.userAgent);
 
       const options = {
         key:         keyId,
@@ -206,6 +217,24 @@ export default function CheckoutPage() {
           contact: form.phone,
         },
         theme: { color: '#C9A84C' },
+        method: { upi: true, upi_qr: true, card: true, netbanking: true, wallet: true },
+        config: {
+          display: {
+            blocks: {
+              upi: {
+                name: isMobilePhone ? 'Pay via UPI Apps (GPay/PhonePe)' : 'Scan QR Code to Pay',
+                instruments: [
+                  {
+                    method: 'upi',
+                    protocols: isMobilePhone ? ['intent'] : ['qr']
+                  }
+                ],
+              },
+            },
+            sequence: ['block.upi'],
+            preferences: { show_default_blocks: true },
+          },
+        },
         handler: async function (response) {
           try {
             const result = await verifyRazorpayPayment({

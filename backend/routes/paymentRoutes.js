@@ -1,7 +1,8 @@
 /**
  * NatureKart — Payment Routes
  * Real Razorpay integration with HMAC signature verification
- * Order is created in DB ONLY after payment is verified
+ * Order is created in DB immediately with 'Payment Pending' on /create-order
+ * Verified on /verify or via Webhook safety net
  */
 const express   = require('express');
 const Razorpay  = require('razorpay');
@@ -56,15 +57,14 @@ function calcEstimatedDelivery(deliveryType) {
 }
 
 /* ── POST /api/payment/create-order ─────────────────────────────────────────
-   Step 1: Create a Razorpay order → return razorpay_order_id to frontend
-   Frontend opens Razorpay checkout modal with this
-──────────────────────────────────────────────────────────────────────────── */
+   Step 1: Create a Razorpay order & pre-create order document in DB
+ ──────────────────────────────────────────────────────────────────────────── */
 router.post('/create-order', async (req, res) => {
   try {
     const razorpay = getRazorpay();
     if (!razorpay) return res.status(503).json({ message: 'Payment gateway not configured' });
 
-    const { amount, currency = 'INR', notes = {} } = req.body;
+    const { amount, currency = 'INR', notes = {}, orderData } = req.body;
 
     if (!amount || amount <= 0) {
       return res.status(400).json({ message: 'Invalid amount' });
@@ -76,6 +76,56 @@ router.post('/create-order', async (req, res) => {
       notes,
       payment_capture: 1,
     });
+
+    // Webhook safety net: Create Order document immediately with pending status
+    if (orderData) {
+      let authUserId = orderData.userId || null;
+      try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (token) {
+          const jwt = require('jsonwebtoken');
+          const SECRET = process.env.JWT_SECRET || 'naturekart_jwt_secret_2024';
+          const decoded = jwt.verify(token, SECRET);
+          if (decoded.id) authUserId = decoded.id;
+        }
+      } catch (_) {}
+
+      const estimatedDelivery = calcEstimatedDelivery(orderData.deliveryType || 'Standard');
+      const orderId = generateOrderId();
+      const invoiceNumber = generateInvoiceNumber();
+
+      await Order.create({
+        orderId,
+        invoiceNumber,
+        customer: {
+          name:    orderData.address.name,
+          email:   orderData.address.email,
+          phone:   orderData.address.phone,
+          address: orderData.address.address,
+          city:    orderData.address.city,
+          state:   orderData.address.state,
+          pincode: orderData.address.pincode,
+        },
+        userId:        authUserId,
+        items: orderData.items.map(i => ({
+          productId: String(i._id || i.productId || i.id),
+          name:      i.name,
+          price:     i.price,
+          quantity:  i.quantity,
+          image:     i.image || '',
+        })),
+        subtotal:          orderData.subtotal || orderData.totalAmount,
+        shippingCost:      orderData.shippingCost || 0,
+        totalAmount:       orderData.totalAmount,
+        deliveryType:      orderData.deliveryType || 'Standard',
+        estimatedDelivery,
+        status:            'Payment Pending',
+        paymentMethod:     'Razorpay',
+        paymentStatus:     'pending',
+        razorpayOrderId:   razorpayOrder.id,
+        trackingHistory: [{ status: 'Payment Pending', note: 'Order created, awaiting payment', timestamp: new Date() }],
+      });
+    }
 
     res.json({
       success:         true,
@@ -91,9 +141,8 @@ router.post('/create-order', async (req, res) => {
 });
 
 /* ── POST /api/payment/verify ───────────────────────────────────────────────
-   Step 2: Verify HMAC signature → create NatureKart order in DB
-   Order appears in Admin Panel ONLY after this succeeds
-──────────────────────────────────────────────────────────────────────────── */
+   Step 2: Verify HMAC signature → Update existing order in DB to placed/paid
+ ──────────────────────────────────────────────────────────────────────────── */
 router.post('/verify', async (req, res) => {
   try {
     const razorpay = getRazorpay();
@@ -103,11 +152,11 @@ router.post('/verify', async (req, res) => {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      orderData,          // { items, address, deliveryType, shippingCost, subtotal, totalAmount, userId }
+      orderData,
     } = req.body;
 
     /* ── 0. Extract userId from JWT (more reliable than frontend) ── */
-    let authUserId = orderData.userId || null;
+    let authUserId = orderData?.userId || null;
     try {
       const token = req.headers.authorization?.split(' ')[1];
       if (token) {
@@ -116,7 +165,7 @@ router.post('/verify', async (req, res) => {
         const decoded = jwt.verify(token, SECRET);
         if (decoded.id) authUserId = decoded.id;
       }
-    } catch (_) { /* token might be absent for guest checkout */ }
+    } catch (_) {}
 
     /* ── 1. Verify signature ── */
     const expectedSig = crypto
@@ -128,6 +177,20 @@ router.post('/verify', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Payment verification failed — signature mismatch' });
     }
 
+    // Idempotency check: If the webhook safety net already marked the order paid, return success details
+    let order = await Order.findOne({ razorpayOrderId: razorpay_order_id });
+    if (order && order.paymentStatus === 'paid') {
+      console.log(`ℹ️ /verify: Order ${order.orderId} was already paid via webhook. Returning success directly.`);
+      return res.json({
+        success:           true,
+        orderId:           order.orderId,
+        invoiceNumber:     order.invoiceNumber,
+        estimatedDelivery: order.estimatedDelivery,
+        paymentMethod:     order.paymentMethod,
+        totalAmount:       order.totalAmount,
+      });
+    }
+
     /* ── 2. Fetch payment details for method ── */
     let paymentMethod = 'Razorpay';
     try {
@@ -136,57 +199,68 @@ router.post('/verify', async (req, res) => {
       paymentMethod = methodMap[payment.method] || payment.method || 'Razorpay';
     } catch (_) {}
 
-    /* ── 3. Calculate delivery date ── */
-    const estimatedDelivery = calcEstimatedDelivery(orderData.deliveryType || 'Standard');
-    const orderId      = generateOrderId();
-    const invoiceNumber = generateInvoiceNumber();
+    /* ── 3. Update or Fallback Create order in DB ── */
+    if (!order) {
+      // Fallback: create order if pre-creation was skipped/failed
+      const estimatedDelivery = calcEstimatedDelivery(orderData?.deliveryType || 'Standard');
+      const orderId = generateOrderId();
+      const invoiceNumber = generateInvoiceNumber();
 
-    /* ── 4. Create order in DB ── */
-    const newOrder = await Order.create({
-      orderId,
-      invoiceNumber,
-      customer: {
-        name:    orderData.address.name,
-        email:   orderData.address.email,
-        phone:   orderData.address.phone,
-        address: orderData.address.address,
-        city:    orderData.address.city,
-        state:   orderData.address.state,
-        pincode: orderData.address.pincode,
-      },
-      userId:        authUserId,
-      items: orderData.items.map(i => ({
-        productId: String(i._id || i.productId || i.id),
-        name:      i.name,
-        price:     i.price,
-        quantity:  i.quantity,
-        image:     i.image || '',
-      })),
-      subtotal:          orderData.subtotal || orderData.totalAmount,
-      shippingCost:      orderData.shippingCost || 0,
-      totalAmount:       orderData.totalAmount,
-      deliveryType:      orderData.deliveryType || 'Standard',
-      estimatedDelivery,
-      status:            'Placed',
-      paymentMethod,
-      paymentStatus:     'paid',
-      razorpayOrderId:   razorpay_order_id,
-      razorpayPaymentId: razorpay_payment_id,
-      razorpaySignature: razorpay_signature,
-      trackingHistory: [{ status: 'Placed', note: 'Order placed and payment received', timestamp: new Date() }],
-    });
-
-    /* ── 5. Send order confirmation email ── */
-    try {
-      await sendOrderConfirmationEmail(
-        orderData.address.email,
-        orderData.address.name,
+      order = await Order.create({
         orderId,
         invoiceNumber,
-        newOrder.items,
-        newOrder.totalAmount,
-        newOrder.shippingCost,
+        customer: {
+          name:    orderData?.address?.name || 'Customer',
+          email:   orderData?.address?.email || '',
+          phone:   orderData?.address?.phone || '',
+          address: orderData?.address?.address || '',
+          city:    orderData?.address?.city || '',
+          state:   orderData?.address?.state || '',
+          pincode: orderData?.address?.pincode || '',
+        },
+        userId:        authUserId,
+        items: (orderData?.items || []).map(i => ({
+          productId: String(i._id || i.productId || i.id),
+          name:      i.name,
+          price:     i.price,
+          quantity:  i.quantity,
+          image:     i.image || '',
+        })),
+        subtotal:          orderData?.subtotal || orderData?.totalAmount || 0,
+        shippingCost:      orderData?.shippingCost || 0,
+        totalAmount:       orderData?.totalAmount || 0,
+        deliveryType:      orderData?.deliveryType || 'Standard',
         estimatedDelivery,
+        status:            'Placed',
+        paymentMethod,
+        paymentStatus:     'paid',
+        razorpayOrderId:   razorpay_order_id,
+        razorpayPaymentId: razorpay_payment_id,
+        razorpaySignature: razorpay_signature,
+        trackingHistory: [{ status: 'Placed', note: 'Order placed and payment received', timestamp: new Date() }],
+      });
+    } else {
+      // Order exists and is pending, update it
+      order.status = 'Placed';
+      order.paymentStatus = 'paid';
+      order.razorpayPaymentId = razorpay_payment_id;
+      order.razorpaySignature = razorpay_signature;
+      order.paymentMethod = paymentMethod;
+      order.trackingHistory.push({ status: 'Placed', note: 'Order placed and payment received', timestamp: new Date() });
+      await order.save();
+    }
+
+    /* ── 4. Send order confirmation email ── */
+    try {
+      await sendOrderConfirmationEmail(
+        order.customer.email,
+        order.customer.name,
+        order.orderId,
+        order.invoiceNumber,
+        order.items,
+        order.totalAmount,
+        order.shippingCost,
+        order.estimatedDelivery,
         paymentMethod,
         razorpay_payment_id
       );
@@ -196,11 +270,11 @@ router.post('/verify', async (req, res) => {
 
     res.json({
       success:           true,
-      orderId,
-      invoiceNumber,
-      estimatedDelivery,
+      orderId:           order.orderId,
+      invoiceNumber:     order.invoiceNumber,
+      estimatedDelivery: order.estimatedDelivery,
       paymentMethod,
-      totalAmount:       newOrder.totalAmount,
+      totalAmount:       order.totalAmount,
     });
   } catch (err) {
     console.error('Payment verify error:', err);
@@ -208,9 +282,104 @@ router.post('/verify', async (req, res) => {
   }
 });
 
+/* ── POST /api/payment/webhook ──────────────────────────────────────────────
+   Webhook Safety Net: Receives events directly from Razorpay
+ ──────────────────────────────────────────────────────────────────────────── */
+router.post('/webhook', async (req, res) => {
+  try {
+    const signature = req.headers['x-razorpay-signature'];
+    if (!signature) {
+      return res.status(400).json({ message: 'Missing signature header' });
+    }
+
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.warn('⚠️ Webhook secret not configured in .env (RAZORPAY_WEBHOOK_SECRET)');
+      return res.status(500).json({ message: 'Webhook secret not configured' });
+    }
+
+    const expectedSignature = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(req.rawBody || '')
+      .digest('hex');
+
+    if (expectedSignature !== signature) {
+      console.warn('⚠️ Webhook signature verification failed');
+      return res.status(400).json({ message: 'Invalid signature mismatch' });
+    }
+
+    const eventData = JSON.parse((req.rawBody || '{}').toString());
+    const event = eventData.event;
+
+    if (event === 'payment.captured') {
+      const paymentEntity = eventData.payload?.payment?.entity;
+      const razorpayOrderId = paymentEntity?.order_id;
+      const razorpayPaymentId = paymentEntity?.id;
+      const methodMap = { card: 'Card', netbanking: 'Net Banking', upi: 'UPI', wallet: 'Wallet', emi: 'EMI' };
+      const paymentMethod = methodMap[paymentEntity?.method] || paymentEntity?.method || 'Razorpay';
+
+      if (!razorpayOrderId) {
+        console.log('⚠️ Webhook payment.captured received but no order_id in payload');
+        return res.json({ status: 'ok' });
+      }
+
+      console.log(`🔔 Webhook payment.captured: orderId=${razorpayOrderId}, paymentId=${razorpayPaymentId}`);
+
+      const order = await Order.findOne({ razorpayOrderId });
+      if (!order) {
+        // "do not throw if the order isn't found yet (race condition) — log it instead"
+        console.log(`⚠️ Webhook: Order with razorpayOrderId "${razorpayOrderId}" not found in database yet.`);
+        return res.json({ status: 'ok' });
+      }
+
+      // Check current status before updating (idempotent)
+      if (order.paymentStatus !== 'paid') {
+        order.paymentStatus = 'paid';
+        order.status = 'Placed';
+        order.razorpayPaymentId = razorpayPaymentId || order.razorpayPaymentId;
+        order.paymentMethod = paymentMethod;
+        order.trackingHistory.push({
+          status: 'Placed',
+          note: 'Payment captured via Webhook safety net',
+          timestamp: new Date()
+        });
+        await order.save();
+
+        console.log(`✅ Webhook: Order ${order.orderId} updated to paid/Placed.`);
+
+        // Send confirmation email
+        try {
+          await sendOrderConfirmationEmail(
+            order.customer.email,
+            order.customer.name,
+            order.orderId,
+            order.invoiceNumber,
+            order.items,
+            order.totalAmount,
+            order.shippingCost,
+            order.estimatedDelivery,
+            paymentMethod,
+            razorpayPaymentId
+          );
+          console.log(`📧 Webhook: Confirmation email sent for order ${order.orderId}`);
+        } catch (emailErr) {
+          console.error('📧 Webhook: Order confirmation email error:', emailErr.message);
+        }
+      } else {
+        console.log(`ℹ️ Webhook: Order ${order.orderId} is already paid. Skipping update.`);
+      }
+    }
+
+    res.json({ status: 'ok' });
+  } catch (err) {
+    console.error('Webhook error:', err);
+    res.status(500).json({ message: err.message || 'Webhook internal error' });
+  }
+});
+
 /* ── GET /api/payment/key ───────────────────────────────────────────────────
    Return Razorpay key ID to frontend safely
-──────────────────────────────────────────────────────────────────────────── */
+ ──────────────────────────────────────────────────────────────────────────── */
 router.get('/key', (req, res) => {
   res.json({ keyId: process.env.RAZORPAY_KEY_ID });
 });
