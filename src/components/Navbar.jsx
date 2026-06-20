@@ -43,7 +43,7 @@ export default function Navbar() {
     { label: "Shop",         path: "/shop" },
     { label: "About",        path: "/about" },
     { label: "Contact",      path: "/contact" },
-    { label: "🤖 AI Health", path: "/ai-assistant", pill: true },
+    { label: "✦ AI Advisor", path: "/ai-assistant" },
   ];
 
   const navLinks = isAdmin

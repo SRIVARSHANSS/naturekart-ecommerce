@@ -43,12 +43,27 @@ function AdminRoute({ children }) {
   return children;
 }
 
+/* ── Private Route Guard ────────────────────────────────────────────────────── */
+function PrivateRoute({ children }) {
+  const { isLoggedIn, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) return null;
+
+  if (!isLoggedIn) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
+}
+
 /* ── App ───────────────────────────────────────────────────────────────────── */
 function App() {
+  const { loading: authLoading } = useAuth();
   const navigate  = useNavigate();
   const location  = useLocation();
   const [loading, setLoading]   = useState(false);
-
+  
   // Don't show website UI on admin pages
   const isAdminPage = location.pathname.startsWith('/admin');
 
@@ -74,6 +89,8 @@ function App() {
 
   /* Products are fetched per-page from the API — no static lookup needed */
 
+  if (authLoading) return <Loader show={true} />;
+
   return (
     <>
       {/* Only show website-level UI on non-admin pages */}
@@ -89,23 +106,59 @@ function App() {
             <NatureKartHome onNavigate={navigatePage} onViewProduct={viewProduct} showLoader={() => setLoading(true)} />
           } />
           <Route path="/shop" element={
-            <ProductListing onNavigate={navigatePage} onViewProduct={viewProduct} showLoader={() => setLoading(true)} />
+            <PrivateRoute>
+              <ProductListing onNavigate={navigatePage} onViewProduct={viewProduct} showLoader={() => setLoading(true)} />
+            </PrivateRoute>
           } />
           <Route path="/product/:id" element={
-            <ProductDetailsWrapper onNavigate={navigatePage} onViewProduct={viewProduct} showLoader={() => setLoading(true)} />
+            <PrivateRoute>
+              <ProductDetailsWrapper onNavigate={navigatePage} onViewProduct={viewProduct} showLoader={() => setLoading(true)} />
+            </PrivateRoute>
           } />
-          <Route path="/cart"               element={<CartPage onNavigate={navigatePage} />} />
-          <Route path="/checkout"           element={<CheckoutPageWrapper hideLoader={() => setLoading(false)} />} />
-          <Route path="/order-confirmation" element={<OrderConfirmation />} />
+          <Route path="/cart" element={
+            <PrivateRoute>
+              <CartPage onNavigate={navigatePage} />
+            </PrivateRoute>
+          } />
+          <Route path="/checkout" element={
+            <PrivateRoute>
+              <CheckoutPageWrapper hideLoader={() => setLoading(false)} />
+            </PrivateRoute>
+          } />
+          <Route path="/order-confirmation" element={
+            <PrivateRoute>
+              <OrderConfirmation />
+            </PrivateRoute>
+          } />
           <Route path="/login"              element={<LoginPage />} />
           <Route path="/register"           element={<RegisterPage />} />
-          <Route path="/wishlist"           element={<WishlistPage />} />
-          <Route path="/profile"            element={<ProfilePage />} />
-          <Route path="/order-tracking"          element={<OrderTracking />} />
-          <Route path="/order-tracking/:orderId" element={<OrderTracking />} />
+          <Route path="/wishlist" element={
+            <PrivateRoute>
+              <WishlistPage />
+            </PrivateRoute>
+          } />
+          <Route path="/profile" element={
+            <PrivateRoute>
+              <ProfilePage />
+            </PrivateRoute>
+          } />
+          <Route path="/order-tracking" element={
+            <PrivateRoute>
+              <OrderTracking />
+            </PrivateRoute>
+          } />
+          <Route path="/order-tracking/:orderId" element={
+            <PrivateRoute>
+              <OrderTracking />
+            </PrivateRoute>
+          } />
           <Route path="/about"                   element={<AboutPage />} />
           <Route path="/contact"                 element={<ContactPage />} />
-          <Route path="/ai-assistant"            element={<AIAssistantPage />} />
+          <Route path="/ai-assistant" element={
+            <PrivateRoute>
+              <AIAssistantPage />
+            </PrivateRoute>
+          } />
 
           {/* ── Admin routes (protected) ───────────────────────────────── */}
           <Route path="/admin"           element={<Navigate to="/admin/dashboard" replace />} />

@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { chatWithNatureBot } from '../services/api';
 import { useCart } from '../context/CartContext';
+import { getProducts } from '../services/api';
+import { matchSymptoms } from '../utils/symptomMatcher';
+import Navbar from '../components/Navbar';
 
 const HISTORY_KEY = 'naturekart_ai_history';
 
@@ -11,43 +13,65 @@ const GOAL_CARDS = [
   { icon: '😴', label: 'Better Sleep',        category: 'sleep',     query: 'I have trouble sleeping at night' },
   { icon: '🛡️', label: 'Boost Immunity',     category: 'immunity',  query: 'I want to boost my immunity naturally' },
   { icon: '⚖️', label: 'Weight Management',  category: 'weight',    query: 'I need help with weight management' },
-  { icon: '✨', label: 'Skin Glow',           category: 'skincare',  query: 'I want glowing healthy skin naturally' },
+  { icon: '✨', label: 'Skin & Hair Care',   category: 'skincare',  query: 'I want healthy glowing skin and hair' },
   { icon: '⚡', label: 'More Energy',         category: 'energy',    query: 'I feel fatigued and need more energy' },
   { icon: '🌿', label: 'Better Digestion',   category: 'digestion', query: 'I have digestive issues and bloating' },
   { icon: '💚', label: 'Overall Wellness',   category: 'general',   query: 'I want general health and wellness support' },
 ];
 
 const TypingDots = () => (
-  <div className="flex items-center gap-1 py-1">
-    {[0,1,2].map(i => (
-      <motion.div key={i} animate={{ y: [0,-5,0] }}
-        transition={{ duration:0.5, repeat:Infinity, delay:i*0.12, ease:'easeInOut' }}
-        className="w-2 h-2 bg-emerald-400 rounded-full" />
+  <div className="flex items-center gap-1.5 py-2 px-1">
+    {[0, 1, 2].map(i => (
+      <motion.div
+        key={i}
+        animate={{ y: [0, -5, 0] }}
+        transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15, ease: 'easeInOut' }}
+        className="w-2.5 h-2.5 bg-gold-light rounded-full"
+      />
     ))}
   </div>
 );
 
 export default function AIAssistantPage() {
-  const navigate    = useNavigate();
-  const [params]    = useSearchParams();
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
   const { addToCart } = useCart();
 
-  const [messages,   setMessages]   = useState([]);
-  const [products,   setProducts]   = useState([]);
-  const [input,      setInput]      = useState('');
-  const [isLoading,  setIsLoading]  = useState(false);
-  const [category,   setCategory]   = useState('general');
-  const [addedIds,   setAddedIds]   = useState({});
-  const bottomRef  = useRef(null);
-  const inputRef   = useRef(null);
-  const abortRef   = useRef(null);
+  const [messages, setMessages] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [dbProducts, setDbProducts] = useState([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [category, setCategory] = useState('general');
+  const [addedIds, setAddedIds] = useState({});
+  
+  const bottomRef = useRef(null);
+  const inputRef = useRef(null);
   const autoSentRef = useRef(false);
+
+  /* Load database products on mount */
+  useEffect(() => {
+    getProducts()
+      .then(data => {
+        setDbProducts(data || []);
+      })
+      .catch(err => {
+        console.error("Error loading products from database:", err);
+      });
+  }, []);
 
   /* Load history from localStorage */
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-      if (saved.length > 0) setMessages(saved);
+      if (saved.length > 0) {
+        setMessages(saved);
+        // Extract category & products from last assistant message
+        const lastAssistant = [...saved].reverse().find(m => m.role === 'assistant');
+        if (lastAssistant) {
+          setCategory(lastAssistant.category || 'general');
+        }
+      }
     } catch (_) {}
   }, []);
 
@@ -58,306 +82,422 @@ export default function AIAssistantPage() {
     }
   }, [messages]);
 
-  /* Auto-send if ?category param exists */
-  useEffect(() => {
-    const cat = params.get('category');
-    if (cat && !autoSentRef.current) {
-      autoSentRef.current = true;
-      const card = GOAL_CARDS.find(c => c.category === cat);
-      if (card) setTimeout(() => sendMessage(card.query), 600);
-    }
-  }, [params]); // eslint-disable-line
-
   /* Scroll to bottom */
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
+
+  /* Auto-send if ?category param exists */
+  useEffect(() => {
+    const cat = params.get('category');
+    if (cat && !autoSentRef.current && dbProducts.length > 0) {
+      autoSentRef.current = true;
+      const card = GOAL_CARDS.find(c => c.category === cat);
+      if (card) {
+        setTimeout(() => sendMessage(card.query), 600);
+      }
+    }
+  }, [params, dbProducts]); // eslint-disable-line
 
   const sendMessage = useCallback(async (text) => {
     const msg = (text || input).trim();
     if (!msg || isLoading) return;
     setInput('');
 
-    const userMsg = { role: 'user', content: msg, id: Date.now(), timestamp: new Date().toISOString() };
+    const userMsg = {
+      role: 'user',
+      content: msg,
+      id: Date.now(),
+      timestamp: new Date().toISOString()
+    };
+    
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
     setProducts([]);
 
-    if (abortRef.current) abortRef.current.abort();
-    abortRef.current = new AbortController();
-
-    try {
-      const history = messages.slice(-10).map(m => ({ role: m.role, content: m.content }));
-      const data = await chatWithNatureBot(msg, history);
-
+    // Simulate natural thinking delay for premium feel
+    setTimeout(() => {
+      const data = matchSymptoms(msg, dbProducts);
+      
       const aiMsg = {
-        role: 'assistant', content: data.message, id: Date.now() + 1,
-        category: data.category, timestamp: new Date().toISOString(),
+        role: 'assistant',
+        content: data.message,
+        id: Date.now() + 1,
+        category: data.category,
+        timestamp: new Date().toISOString(),
         followUps: data.followUpSuggestions || [],
+        matchedProducts: data.products || []
       };
+
       setMessages(prev => [...prev, aiMsg]);
       setProducts(data.products || []);
       setCategory(data.category || 'general');
-    } catch (err) {
-      if (err.name !== 'AbortError') {
-        setMessages(prev => [...prev, {
-          role: 'assistant', id: Date.now() + 1, timestamp: new Date().toISOString(),
-          content: 'NatureBot is resting 🌿 Please try again in a moment.',
-          category: 'general', followUps: [],
-        }]);
-      }
-    } finally {
       setIsLoading(false);
+    }, 1200);
+  }, [input, dbProducts, isLoading]);
+
+  // Update products panel when messages are loaded/changed
+  useEffect(() => {
+    const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+    if (lastAssistant && lastAssistant.matchedProducts) {
+      setProducts(lastAssistant.matchedProducts);
     }
-  }, [input, messages, isLoading]);
+  }, [messages]);
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
   };
 
   const clearChat = () => {
-    setMessages([]); setProducts([]); setCategory('general');
+    setMessages([]);
+    setProducts([]);
+    setCategory('general');
     localStorage.removeItem(HISTORY_KEY);
   };
 
   const exportChat = () => {
     const text = messages.map(m => `[${m.role === 'user' ? 'You' : 'NatureBot'}]: ${m.content}`).join('\n\n');
     const blob = new Blob([text], { type: 'text/plain' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-    a.download = 'naturekart-chat.txt'; a.click();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'naturekart-advisor-chat.txt';
+    a.click();
   };
 
   const handleAddToCart = (product) => {
     addToCart(product);
     setAddedIds(prev => ({ ...prev, [product._id]: true }));
-    setTimeout(() => setAddedIds(prev => { const n = {...prev}; delete n[product._id]; return n; }), 1500);
+    setTimeout(() => setAddedIds(prev => {
+      const n = { ...prev };
+      delete n[product._id];
+      return n;
+    }), 2000);
   };
 
-  const catColor = { stress:'purple', sleep:'indigo', immunity:'green', weight:'orange', skincare:'pink', energy:'yellow', digestion:'teal', general:'emerald' };
-  const getBadge = (cat) => {
-    const colors = { stress:'bg-purple-100 text-purple-700', sleep:'bg-indigo-100 text-indigo-700', immunity:'bg-green-100 text-green-700', weight:'bg-orange-100 text-orange-700', skincare:'bg-pink-100 text-pink-700', energy:'bg-yellow-100 text-yellow-800', digestion:'bg-teal-100 text-teal-700', general:'bg-emerald-100 text-emerald-700' };
+  const getBadgeColor = (cat) => {
+    const colors = {
+      stress: 'bg-gold-light/20 text-gold border-gold-light/35',
+      sleep: 'bg-gold-light/20 text-gold border-gold-light/35',
+      immunity: 'bg-gold-light/20 text-gold border-gold-light/35',
+      weight: 'bg-gold-light/20 text-gold border-gold-light/35',
+      skincare: 'bg-gold-light/20 text-gold border-gold-light/35',
+      energy: 'bg-gold-light/20 text-gold border-gold-light/35',
+      digestion: 'bg-gold-light/20 text-gold border-gold-light/35',
+      general: 'bg-gold/10 text-gold border-gold/20'
+    };
     return colors[cat] || colors.general;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-stone-50 to-white font-sans">
+    <div className="min-h-screen bg-bg text-gold font-sans antialiased">
+      <Navbar />
 
-      {/* ── Navbar ── */}
-      <nav className="bg-white border-b border-stone-100 px-4 py-3 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <button onClick={() => navigate('/')} className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
-              <span className="text-white">🌿</span>
-            </div>
-            <span className="text-lg font-bold text-green-800">Nature<span className="text-emerald-500">Kart</span></span>
-          </button>
-          <div className="hidden md:flex items-center gap-1">
-            {[['/','/','Home'],[ '/shop','/shop','Shop'],['/about','/about','About'],['/contact','/contact','Contact']].map(([path,,label]) => (
-              <button key={path} onClick={() => navigate(path)} className="px-3 py-1.5 text-sm font-semibold rounded-xl text-stone-600 hover:text-green-700 hover:bg-green-50 transition-all">{label}</button>
-            ))}
-            <span className="ml-1 px-3 py-1.5 text-sm font-bold rounded-xl bg-gradient-to-r from-green-600 to-emerald-500 text-white shadow-sm">🤖 AI Assistant</span>
-          </div>
-          <button onClick={() => navigate('/shop')} className="px-3 py-2 text-sm font-bold text-green-700 hover:bg-green-50 rounded-xl transition-all">🛍️ Shop</button>
-        </div>
-      </nav>
-
-      {/* ── Hero ── */}
-      <section className="relative bg-gradient-to-br from-green-900 via-green-800 to-emerald-700 min-h-[38vh] flex items-center justify-center overflow-hidden">
-        {/* Floating leaves background */}
-        {['🌿','🍃','🌱','✨','🌿','🍃'].map((e, i) => (
-          <motion.div key={i} className="absolute text-2xl opacity-20 pointer-events-none select-none"
-            style={{ left: `${10 + i * 16}%`, top: `${20 + (i % 3) * 25}%` }}
-            animate={{ y: [0, -12, 0], rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 4 + i, repeat: Infinity, delay: i * 0.6 }}>
-            {e}
+      {/* ── Header / Hero ── */}
+      <div className="relative border-b border-gold/10 bg-surface overflow-hidden pt-28 pb-14">
+        {/* Leaf Background Accents */}
+        {['🌿', '🍃', '🌱', '✨', '🍃'].map((emoji, i) => (
+          <motion.div
+            key={i}
+            className="absolute text-3xl opacity-15 pointer-events-none select-none"
+            style={{ left: `${8 + i * 22}%`, top: `${20 + (i % 3) * 20}%` }}
+            animate={{ y: [0, -10, 0], rotate: [0, 8, -8, 0] }}
+            transition={{ duration: 5 + i, repeat: Infinity, delay: i * 0.4 }}
+          >
+            {emoji}
           </motion.div>
         ))}
-        <div className="relative z-10 text-center px-4 py-12">
-          <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type:'spring', stiffness:200, delay:0.1 }}
-            className="w-20 h-20 mx-auto mb-5 bg-white/10 backdrop-blur-sm rounded-3xl flex items-center justify-center border border-white/20 shadow-xl">
-            <motion.span animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }} className="text-4xl">🌿</motion.span>
-          </motion.div>
-          <motion.h1 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}
-            className="text-3xl md:text-4xl font-black text-white mb-3">NatureBot — Your AI Health Companion</motion.h1>
-          <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}
-            className="text-emerald-200 text-base max-w-xl mx-auto">Describe how you're feeling. I'll understand and recommend the perfect natural products for you.</motion.p>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <p className="text-gold-dim text-xs tracking-[0.25em] uppercase font-sans mb-3 italic">
+            — Pure Ayurvedic Guidance
+          </p>
+          <h1 className="font-serif text-4xl md:text-5xl text-gold tracking-tight leading-none mb-3">
+            Botanical Advisor
+          </h1>
+          <p className="text-gold-light text-sm max-w-xl mx-auto font-sans leading-relaxed">
+            Tell us how you are feeling or what you want to improve. Our symptom engine will instantly match you with perfect natural remedies.
+          </p>
         </div>
-      </section>
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
+      </div>
 
-      {/* ── Quick Cards ── */}
-      <section className="max-w-7xl mx-auto px-4 py-8">
-        <p className="text-sm font-bold text-stone-500 uppercase tracking-wider mb-4 text-center">Choose a health goal to get started</p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-          {GOAL_CARDS.map((card, i) => (
-            <motion.button key={card.category}
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-              whileHover={{ y: -4, boxShadow: '0 12px 28px rgba(16,185,129,0.25)' }} whileTap={{ scale: 0.97 }}
+      {/* ── Quick Goal Grid ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <p className="text-xs font-bold text-gold-dim uppercase tracking-[0.15em] mb-5 text-center">
+          Select a wellness goal to begin
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+          {GOAL_CARDS.map((card) => (
+            <motion.button
+              key={card.category}
+              whileHover={{ y: -4, borderColor: 'rgba(27, 54, 38, 0.6)' }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => sendMessage(card.query)}
-              className="bg-white border border-stone-100 rounded-2xl p-3 flex flex-col items-center gap-2 shadow-sm hover:border-green-300 transition-all cursor-pointer">
-              <div className="w-10 h-10 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl flex items-center justify-center text-xl border border-green-100">{card.icon}</div>
-              <span className="text-xs font-bold text-stone-700 text-center leading-tight">{card.label}</span>
+              className="bg-surface/50 border border-gold/15 p-4 flex flex-col items-center gap-3 transition-all cursor-pointer relative"
+            >
+              {/* Corner accents */}
+              <div className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-gold/35" />
+              <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-gold/35" />
+              
+              <div className="w-12 h-12 rounded-sm bg-surface flex items-center justify-center text-2xl border border-gold/10">
+                {card.icon}
+              </div>
+              <span className="text-xs font-serif font-bold text-gold text-center leading-tight">
+                {card.label}
+              </span>
             </motion.button>
           ))}
         </div>
-      </section>
+      </div>
 
-      {/* ── Main Chat + Products ── */}
-      <section className="max-w-7xl mx-auto px-4 pb-16">
-        <div className="flex flex-col lg:flex-row gap-6">
+      {/* ── Main Workspace ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <div className="flex flex-col lg:flex-row gap-8">
 
-          {/* Chat Panel */}
-          <div className="flex-1 lg:w-[60%] bg-white rounded-3xl border border-stone-100 shadow-lg flex flex-col overflow-hidden" style={{ minHeight: 560 }}>
+          {/* ── Chat Container ── */}
+          <div className="flex-1 bg-surface/40 border border-gold/15 flex flex-col relative" style={{ minHeight: 520 }}>
+            {/* Corner Accents */}
+            <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-gold/45" />
+            <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-gold/45" />
+
             {/* Chat Header */}
-            <div className="px-5 py-4 border-b border-stone-100 flex items-center justify-between bg-gradient-to-r from-green-800 to-emerald-700">
+            <div className="px-6 py-4 border-b border-gold/15 flex items-center justify-between bg-surface/75">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center text-lg">🌿</div>
+                <span className="text-xl">🌿</span>
                 <div>
-                  <p className="text-white font-bold text-sm">NatureBot Chat</p>
-                  <div className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-emerald-300 rounded-full animate-pulse" />
-                    <span className="text-emerald-200 text-xs">AI-powered · Ayurveda knowledge</span>
+                  <h3 className="font-serif font-bold text-base text-gold leading-tight">NatureBot</h3>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="w-1.5 h-1.5 bg-gold-light rounded-full animate-pulse" />
+                    <span className="text-[11px] text-gold-dim font-sans uppercase tracking-wider">Ayurvedic Matching Active</span>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button onClick={exportChat} title="Export chat" className="text-white/70 hover:text-white text-xs px-2 py-1 rounded-lg hover:bg-white/10 transition-all font-semibold">⬇ Export</button>
-                <button onClick={clearChat} title="Clear chat" className="text-white/70 hover:text-white text-xs px-2 py-1 rounded-lg hover:bg-white/10 transition-all font-semibold">🗑 Clear</button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={exportChat}
+                  className="text-xs text-gold hover:text-gold-light transition-all font-semibold uppercase tracking-wider border-r border-gold/20 pr-3"
+                >
+                  Export
+                </button>
+                <button
+                  onClick={clearChat}
+                  className="text-xs text-gold hover:text-gold-light transition-all font-semibold uppercase tracking-wider"
+                >
+                  Clear
+                </button>
               </div>
             </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 bg-stone-50" style={{ maxHeight: 440 }}>
+            {/* Chat Messages */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 max-h-[440px] bg-surface/20">
               {messages.length === 0 && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
-                  <div className="text-5xl mb-3">🌿</div>
-                  <p className="text-stone-500 font-medium">Hi! I'm NatureBot.</p>
-                  <p className="text-stone-400 text-sm mt-1">Click a health goal above or type your concern below.</p>
-                </motion.div>
+                <div className="text-center py-20">
+                  <span className="text-4xl block mb-3 opacity-60">🌿</span>
+                  <h4 className="font-serif font-bold text-lg text-gold mb-1">Welcome to NatureBot</h4>
+                  <p className="text-gold-dim text-xs max-w-xs mx-auto leading-relaxed">
+                    Describe your physical or mental health concern in detail. We'll search our curated collection for matching herbs.
+                  </p>
+                </div>
               )}
+
               <AnimatePresence initial={false}>
                 {messages.map(msg => (
-                  <motion.div key={msg.id}
-                    initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28 }}
-                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} items-start gap-2`}>
-                    {msg.role === 'assistant' && (
-                      <div className="w-7 h-7 bg-gradient-to-br from-green-700 to-emerald-500 rounded-full flex items-center justify-center text-sm flex-shrink-0">🌿</div>
-                    )}
-                    <div className={`max-w-[80%] ${msg.role === 'user'
-                      ? 'bg-green-600 text-white rounded-2xl rounded-br-sm'
-                      : 'bg-white border border-stone-100 border-l-4 border-l-emerald-400 text-stone-700 rounded-2xl rounded-bl-sm shadow-sm'
-                    } px-4 py-3 text-sm leading-relaxed`}>
-                      <p>{msg.content}</p>
-                      {msg.role === 'assistant' && (
-                        <div className="mt-2 flex items-center gap-2 flex-wrap">
-                          {msg.category && <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getBadge(msg.category)}`}>{msg.category}</span>}
-                          <span className="text-[10px] text-stone-400">{msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' }) : ''}</span>
-                        </div>
+                  <motion.div
+                    key={msg.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`relative px-4 py-3 max-w-[85%] border shadow-sm ${
+                        msg.role === 'user'
+                          ? 'bg-gold text-bg border-gold'
+                          : 'bg-surface border-gold/20 text-gold'
+                      }`}
+                    >
+                      {/* Message corner accents */}
+                      {msg.role !== 'user' && (
+                        <>
+                          <div className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-gold/30" />
+                          <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-gold/30" />
+                        </>
                       )}
-                      {msg.followUps?.length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-1.5">
-                          {msg.followUps.map(f => (
-                            <button key={f} onClick={() => sendMessage(f)}
-                              className="text-[11px] bg-emerald-50 border border-emerald-200 text-emerald-700 px-2 py-1 rounded-full font-semibold hover:bg-emerald-100 transition-all">
-                              {f}
-                            </button>
-                          ))}
+                      
+                      <p className="text-sm font-sans leading-relaxed whitespace-pre-line">{msg.content}</p>
+                      
+                      <div className={`mt-2 flex items-center justify-between gap-4 border-t ${
+                        msg.role === 'user' ? 'border-bg/15 text-bg/60' : 'border-gold/10 text-gold-dim'
+                      } pt-1.5 text-[10px]`}>
+                        {msg.role === 'assistant' && msg.category && (
+                          <span className={`font-semibold uppercase tracking-wider border px-2 py-0.5 ${getBadgeColor(msg.category)}`}>
+                            {msg.category}
+                          </span>
+                        )}
+                        <span>
+                          {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : ''}
+                        </span>
+                      </div>
+
+                      {/* Follow up suggestions */}
+                      {msg.role === 'assistant' && msg.followUps?.length > 0 && (
+                        <div className="mt-3.5 flex flex-col gap-2 border-t border-gold/10 pt-3">
+                          <p className="text-[10px] text-gold-dim font-bold uppercase tracking-wider">Suggested queries:</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {msg.followUps.map(f => (
+                              <button
+                                key={f}
+                                onClick={() => sendMessage(f)}
+                                className="text-[11px] font-sans font-medium bg-surface-light border border-gold/20 text-gold hover:border-gold hover:bg-surface px-2.5 py-1 rounded-[1px] transition-all text-left"
+                              >
+                                {f}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
                   </motion.div>
                 ))}
               </AnimatePresence>
+
               {isLoading && (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-2">
-                  <div className="w-7 h-7 bg-gradient-to-br from-green-700 to-emerald-500 rounded-full flex items-center justify-center text-sm flex-shrink-0">🌿</div>
-                  <div className="bg-white border border-stone-100 border-l-4 border-l-emerald-400 rounded-2xl rounded-bl-sm shadow-sm px-4 py-3">
+                <div className="flex justify-start">
+                  <div className="bg-surface border border-gold/25 px-4 py-3 relative">
+                    <div className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-gold/30" />
+                    <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-gold/30" />
                     <TypingDots />
                   </div>
-                </motion.div>
+                </div>
               )}
               <div ref={bottomRef} />
             </div>
 
-            {/* Input */}
-            <div className="px-4 py-3 border-t border-stone-100 bg-white flex items-end gap-2">
+            {/* Input Form */}
+            <div className="p-4 border-t border-gold/15 bg-surface/65 flex gap-3 items-end">
               <textarea
-                ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown} rows={2}
-                placeholder="Tell me how you're feeling… (e.g., I feel tired and stressed)"
-                className="flex-1 px-4 py-2.5 text-sm rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-green-400 resize-none bg-stone-50 focus:bg-white transition-all"
+                ref={inputRef}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                rows={2}
+                placeholder="Describe your health goal or symptoms (e.g., cold and cough, sleep help)..."
+                className="flex-1 p-3 text-sm border border-gold/20 focus:border-gold bg-bg text-gold placeholder-gold-dim/40 focus:outline-none focus:ring-0 transition-all font-sans resize-none"
               />
-              <div className="flex flex-col items-center gap-1 pb-1">
-                <motion.button whileHover={{ scale:1.08 }} whileTap={{ scale:0.92 }}
-                  onClick={() => sendMessage()} disabled={!input.trim() || isLoading}
-                  className="w-10 h-10 bg-gradient-to-br from-green-600 to-emerald-500 text-white rounded-xl flex items-center justify-center shadow-md disabled:opacity-50">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              <div className="flex flex-col items-center gap-1.5">
+                <button
+                  onClick={() => sendMessage()}
+                  disabled={!input.trim() || isLoading}
+                  className="w-12 h-12 bg-gold text-bg hover:bg-gold-light disabled:opacity-40 transition-all flex items-center justify-center shadow-lg shadow-gold/10 shimmer-btn-glow font-bold"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor" />
                   </svg>
-                </motion.button>
-                <span className="text-[10px] text-stone-400">{input.length}/500</span>
+                </button>
+                <span className="text-[9px] text-gold-dim font-bold tracking-wider">{input.length}/500</span>
               </div>
             </div>
           </div>
 
-          {/* Products Panel */}
-          <div className="lg:w-[40%]">
-            <div className="bg-white rounded-3xl border border-stone-100 shadow-lg overflow-hidden">
-              <div className="px-5 py-4 border-b border-stone-100 bg-gradient-to-r from-green-50 to-emerald-50 flex items-center justify-between">
-                <div>
-                  <p className="font-bold text-stone-800 text-sm">🌿 Recommended For You</p>
-                  {category !== 'general' && <span className={`text-xs font-bold px-2 py-0.5 rounded-full mt-1 inline-block ${getBadge(category)}`}>{category}</span>}
-                </div>
+          {/* ── Product Recommendations Panel ── */}
+          <div className="lg:w-[380px] flex flex-col">
+            <div className="bg-surface/40 border border-gold/15 relative flex flex-col flex-1" style={{ minHeight: 400 }}>
+              {/* Corner Accents */}
+              <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-gold/45" />
+              <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-gold/45" />
+
+              {/* Title Header */}
+              <div className="px-5 py-4 border-b border-gold/15 bg-surface/75 flex items-center justify-between">
+                <h4 className="font-serif font-bold text-sm text-gold tracking-wide uppercase">
+                  🌿 Curated Matches
+                </h4>
+                {category !== 'general' && (
+                  <span className={`text-[10px] font-bold border px-2 py-0.5 tracking-wider uppercase ${getBadgeColor(category)}`}>
+                    {category}
+                  </span>
+                )}
               </div>
 
+              {/* Recommendations Content */}
               {products.length === 0 && !isLoading ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center px-6">
-                  <span className="text-5xl mb-3">🌱</span>
-                  <p className="text-stone-600 font-semibold text-sm">Chat with NatureBot</p>
-                  <p className="text-stone-400 text-xs mt-1">to get personalised product picks!</p>
+                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-surface/10">
+                  <span className="text-4xl mb-3 opacity-30">🌱</span>
+                  <h5 className="font-serif font-bold text-sm text-gold mb-1">Awaiting Consultation</h5>
+                  <p className="text-gold-dim text-xs leading-relaxed max-w-[200px] mx-auto">
+                    Products matching your specific condition will be curated here dynamically.
+                  </p>
                 </div>
               ) : (
-                <div className="p-4 space-y-3 max-h-[560px] overflow-y-auto">
-                  {/* Skeleton while loading */}
-                  {isLoading && products.length === 0 && [1,2,3].map(i => (
-                    <div key={i} className="animate-pulse flex gap-3 p-3 rounded-2xl border border-stone-100">
-                      <div className="w-16 h-16 bg-stone-200 rounded-xl flex-shrink-0" />
+                <div className="p-4 space-y-4 max-h-[500px] overflow-y-auto bg-surface/10">
+                  {/* Skeletons while typing */}
+                  {isLoading && products.length === 0 && [1, 2].map(i => (
+                    <div key={i} className="animate-pulse border border-gold/15 bg-surface/50 p-4 relative flex gap-3">
+                      <div className="w-16 h-16 bg-gold/10 flex-shrink-0" />
                       <div className="flex-1 space-y-2">
-                        <div className="h-3 bg-stone-200 rounded w-3/4" />
-                        <div className="h-3 bg-stone-200 rounded w-1/2" />
-                        <div className="h-3 bg-stone-200 rounded w-1/3" />
+                        <div className="h-3 bg-gold/10 w-3/4" />
+                        <div className="h-3 bg-gold/10 w-1/2" />
+                        <div className="h-3 bg-gold/10 w-1/3" />
                       </div>
                     </div>
                   ))}
+
                   <AnimatePresence>
-                    {products.map((product, i) => (
-                      <motion.div key={product._id}
-                        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
-                        whileHover={{ y: -3, boxShadow: '0 16px 32px rgba(16,185,129,0.18)' }}
-                        className="bg-white border border-stone-100 rounded-2xl p-3 flex gap-3 shadow-sm transition-shadow cursor-default">
-                        {/* Image */}
-                        <div className="relative flex-shrink-0">
-                          <img src={product.image} alt={product.name}
-                            className="w-16 h-16 rounded-xl object-cover bg-stone-100"
-                            onError={e => { e.currentTarget.style.display='none'; }} />
-                          <span className="absolute -top-1 -left-1 text-base">{product.icon || '🌿'}</span>
+                    {!isLoading && products.map((product, i) => (
+                      <motion.div
+                        key={product._id}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.06 }}
+                        className="bg-surface/85 border border-gold/15 p-3 flex gap-3 relative hover:border-gold/30 transition-all group"
+                      >
+                        {/* Card corner accents */}
+                        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-gold/35" />
+                        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-gold/35" />
+
+                        {/* Image wrapper */}
+                        <div className="w-16 h-16 bg-bg flex-shrink-0 relative overflow-hidden border border-gold/10">
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                            onError={e => { e.currentTarget.style.display = 'none'; }}
+                          />
+                          <span className="absolute bottom-0.5 right-0.5 text-sm bg-surface/80 px-0.5">{product.icon || '🌿'}</span>
                         </div>
-                        {/* Info */}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold text-stone-800 text-sm leading-tight line-clamp-1">{product.name}</p>
-                          <p className="text-emerald-600 font-extrabold text-sm mt-0.5">₹{product.price}</p>
-                          <p className="text-stone-400 text-xs italic line-clamp-1 mt-0.5">{product.aiReason || product.description}</p>
-                          <div className="flex items-center gap-1 mt-0.5">
-                            <span className="text-yellow-400 text-xs">{'★'.repeat(Math.round(product.rating || 4))}</span>
-                            <span className="text-xs text-stone-400">({product.reviews || 0})</span>
+
+                        {/* Details */}
+                        <div className="flex-1 min-w-0 flex flex-col justify-between">
+                          <div>
+                            <h5 className="font-serif font-bold text-xs text-gold leading-tight line-clamp-1 group-hover:text-gold-light transition-colors">
+                              {product.name}
+                            </h5>
+                            <p className="text-gold font-bold text-xs font-sans mt-0.5">
+                              ₹{Number(product.price).toLocaleString()}
+                            </p>
+                            <p className="text-gold-dim text-[11px] font-serif italic line-clamp-2 mt-1 leading-snug">
+                              {product.aiReason || product.description}
+                            </p>
                           </div>
-                          <div className="flex gap-1.5 mt-2">
-                            <button onClick={() => navigate(`/product/${product._id}`)}
-                              className="text-[11px] font-bold text-green-700 border border-green-300 px-2 py-1 rounded-lg hover:bg-green-50 transition-all">
-                              View
+
+                          <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-gold/10">
+                            <button
+                              onClick={() => navigate(`/product/${product._id}`)}
+                              className="text-[10px] font-sans font-bold uppercase tracking-wider text-gold hover:text-gold-light border border-gold/25 px-2 py-1 hover:bg-gold/5 transition-all"
+                            >
+                              Details
                             </button>
-                            <motion.button whileTap={{ scale: 0.93 }} onClick={() => handleAddToCart(product)}
-                              className={`text-[11px] font-bold px-2 py-1 rounded-lg transition-all ${addedIds[product._id] ? 'bg-emerald-500 text-white' : 'bg-green-600 text-white hover:bg-green-700'}`}>
-                              {addedIds[product._id] ? '✓ Added' : '+ Cart'}
-                            </motion.button>
+                            <button
+                              onClick={() => handleAddToCart(product)}
+                              className={`text-[10px] font-sans font-bold uppercase tracking-wider px-2 py-1 transition-all ${
+                                addedIds[product._id]
+                                  ? 'bg-gold text-bg'
+                                  : 'bg-gold text-bg hover:bg-gold-light shimmer-btn-glow'
+                              }`}
+                            >
+                              {addedIds[product._id] ? '✓ Added' : '+ Bag'}
+                            </button>
                           </div>
                         </div>
                       </motion.div>
@@ -367,32 +507,21 @@ export default function AIAssistantPage() {
               )}
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* ── How It Works ── */}
-      <section className="bg-gradient-to-br from-green-50 to-emerald-50 py-14 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl font-black text-stone-800 mb-8">How NatureBot Works</h2>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            {[
-              { step: '1', icon: '💬', title: 'Describe concern', desc: 'Tell NatureBot how you feel in plain language' },
-              { step: '2', icon: '🤖', title: 'AI understands', desc: 'GPT-4 analyses your concern with Ayurveda knowledge' },
-              { step: '3', icon: '🌿', title: 'Get matched products', desc: 'Personalised natural products recommended for you' },
-            ].map((step, i) => (
-              <div key={step.step} className="flex sm:flex-col items-center gap-4 sm:gap-2">
-                <motion.div initial={{ opacity:0, y:20 }} whileInView={{ opacity:1, y:0 }} viewport={{ once:true }} transition={{ delay: i*0.15 }}
-                  className="flex flex-col items-center gap-2">
-                  <div className="w-14 h-14 bg-gradient-to-br from-green-600 to-emerald-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-green-200">{step.icon}</div>
-                  <p className="font-bold text-stone-800 text-sm">{step.title}</p>
-                  <p className="text-stone-500 text-xs text-center max-w-[140px]">{step.desc}</p>
-                </motion.div>
-                {i < 2 && <div className="hidden sm:block w-12 h-0.5 bg-gradient-to-r from-green-300 to-emerald-300 mt-[-20px]" />}
-              </div>
-            ))}
-          </div>
         </div>
-      </section>
+      </div>
+
+      {/* ── Guidance Disclaimer ── */}
+      <div className="bg-surface/30 border-t border-gold/15 py-12 px-4">
+        <div className="max-w-3xl mx-auto text-center">
+          <p className="text-gold-dim text-xs font-bold uppercase tracking-widest mb-3">
+            Important Information
+          </p>
+          <p className="text-gold-light text-xs font-sans leading-relaxed italic max-w-2xl mx-auto">
+            Disclaimer: The health advice and recommendations given by NatureBot are based on general Ayurvedic wellness principles and are intended for educational purposes only. They are not a substitute for professional medical advice, diagnosis, or treatment. Please consult with a healthcare professional before starting any herbal supplements.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

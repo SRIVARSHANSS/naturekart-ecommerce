@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -232,7 +232,15 @@ const ForgotPasswordFlow = ({ onClose, forgotPassword, resetPassword }) => {
 /* ══ LOGIN PAGE ═══════════════════════════════════════════════════════════════ */
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login, loginWithGoogle, verifyOtp, resendOtp, forgotPassword, resetPassword } = useAuth();
+  const location = useLocation();
+  const { login, loginWithGoogle, verifyOtp, resendOtp, forgotPassword, resetPassword, isLoggedIn } = useAuth();
+
+  // If already logged in, redirect to homepage
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate('/');
+    }
+  }, [isLoggedIn, navigate]);
 
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
@@ -269,7 +277,8 @@ export default function LoginPage() {
       if (loggedUser?.role === 'admin') {
         setTimeout(() => navigate('/admin/dashboard'), 900);
       } else {
-        setTimeout(() => navigate('/'), 900);
+        const from = location.state?.from?.pathname || '/';
+        setTimeout(() => navigate(from, { replace: true }), 900);
       }
     } catch (err) {
       const data = err?.response?.data;
@@ -295,7 +304,8 @@ export default function LoginPage() {
         const res = await api.post('/auth/google-token', { userInfo });
         loginWithGoogle(res.data.token, res.data.user);
         showToast('🎉 Welcome to NatureKart!');
-        setTimeout(() => navigate('/'), 900);
+        const from = location.state?.from?.pathname || '/';
+        setTimeout(() => navigate(from, { replace: true }), 900);
       } catch {
         showToast('Google login failed. Please try again.', 'error');
       } finally { setGLoading(false); }
@@ -308,7 +318,8 @@ export default function LoginPage() {
     const data = await verifyOtp(pendingEmail, otp);
     showToast('✅ Email verified! Welcome to NatureKart!');
     setShowOTPModal(false);
-    setTimeout(() => navigate('/'), 900);
+    const from = location.state?.from?.pathname || '/';
+    setTimeout(() => navigate(from, { replace: true }), 900);
   };
 
   const handleOtpResend = async () => {
@@ -350,9 +361,7 @@ export default function LoginPage() {
         {/* LEFT — Brand panel (hidden on mobile) */}
         <div className="hidden lg:flex lg:w-[55%] relative flex-col items-center justify-center overflow-hidden px-16"
           style={{ backgroundColor: '#1B3626', borderRight: '1px solid rgba(27,54,38,0.3)' }}>
-          {/* Background texture lines */}
-          <div className="absolute inset-0 opacity-[0.05]"
-            style={{ backgroundImage: 'linear-gradient(rgba(210,229,216,1) 1px,transparent 1px),linear-gradient(90deg,rgba(210,229,216,1) 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
+
 
           {/* Animated background leaves */}
           {['🌿', '🍃', '🌱', '✨', '🌾', '🌿', '🍃', '🌱'].map((e, i) => (

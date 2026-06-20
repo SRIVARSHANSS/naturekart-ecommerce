@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -109,7 +109,15 @@ const Toast = ({ message, type }) => (
 /* ══ REGISTER PAGE ═══════════════════════════════════════════════════════════ */
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const { register, verifyOtp, resendOtp, loginWithGoogle } = useAuth();
+  const location = useLocation();
+  const { register, verifyOtp, resendOtp, loginWithGoogle, isLoggedIn } = useAuth();
+
+  // If already logged in, redirect to homepage
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate('/');
+    }
+  }, [isLoggedIn, navigate]);
 
   const [name,     setName]     = useState('');
   const [email,    setEmail]    = useState('');
@@ -165,7 +173,8 @@ export default function RegisterPage() {
     const data = await verifyOtp(pendingEmail, otp);
     showToast('🎉 Account created! Welcome to NatureKart!', 'success');
     setShowOTP(false);
-    setTimeout(() => navigate('/'), 1000);
+    const from = location.state?.from?.pathname || '/';
+    setTimeout(() => navigate(from, { replace: true }), 1000);
   };
 
   const handleOtpResend = async () => {
@@ -183,7 +192,8 @@ export default function RegisterPage() {
         const res = await api.post('/auth/google-token', { userInfo });
         loginWithGoogle(res.data.token, res.data.user);
         showToast('🎉 Welcome to NatureKart!', 'success');
-        setTimeout(() => navigate('/'), 900);
+        const from = location.state?.from?.pathname || '/';
+        setTimeout(() => navigate(from, { replace: true }), 900);
       } catch {
         showToast('Google signup failed. Please try again.', 'error');
       } finally { setGLoading(false); }
@@ -217,9 +227,7 @@ export default function RegisterPage() {
         {/* LEFT — Brand panel */}
         <div className="hidden lg:flex lg:w-[45%] relative flex-col items-center justify-center overflow-hidden px-14"
           style={{ backgroundColor: '#1B3626', borderRight: '1px solid rgba(27,54,38,0.3)' }}>
-          {/* Background texture lines */}
-          <div className="absolute inset-0 opacity-[0.05]"
-            style={{ backgroundImage: 'linear-gradient(rgba(210,229,216,1) 1px,transparent 1px),linear-gradient(90deg,rgba(210,229,216,1) 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
+
 
           {['🌿', '🍃', '🌱', '✨', '🌾', '🌻', '🍃', '🌿'].map((e, i) => (
             <motion.div key={i}
